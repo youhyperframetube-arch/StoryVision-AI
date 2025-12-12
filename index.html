@@ -2,653 +2,794 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>미스터리 영상 자동 생성 MVP (프론트 스텁)</title>
+  <title>StoryVision AI - 미스터리 영상 자동 프롬프트 & 생성 관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0b1020;
-      color: #f8f8f8;
+      background: #050815;
+      color: #f5f5ff;
     }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
     header {
-      padding: 12px 16px;
-      background: #141a33;
-      border-bottom: 1px solid #222a4a;
+      padding: 16px 20px;
+      background: linear-gradient(90deg, #0c1024, #151b3a);
+      border-bottom: 1px solid #232a4c;
       display: flex;
+      align-items: center;
+      justify-content: space-between;
       flex-wrap: wrap;
       gap: 8px;
-      align-items: center;
     }
+
+    header .title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
     header h1 {
-      font-size: 18px;
+      font-size: 20px;
       margin: 0;
-      margin-right: 12px;
-      white-space: nowrap;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
-    .spacer {
-      flex: 1;
-    }
-    input, textarea, button {
-      font-family: inherit;
-      font-size: 14px;
-    }
-    input[type="text"] {
-      padding: 6px 8px;
-      border-radius: 4px;
-      border: 1px solid #333c66;
-      background: #0f1630;
-      color: #f8f8f8;
-      min-width: 160px;
-    }
-    button {
-      padding: 6px 10px;
-      border-radius: 4px;
-      border: 1px solid #3945a5;
-      background: #2b3685;
-      color: #f8f8f8;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.05s;
-      white-space: nowrap;
-    }
-    button:hover {
-      background: #3c4ac0;
-    }
-    button:active {
-      transform: translateY(1px);
-    }
-    button.secondary {
-      background: #1f253f;
-      border-color: #3a425f;
-    }
-    button.secondary:hover {
-      background: #2a3254;
-    }
-    button.danger {
-      background: #742c2c;
-      border-color: #a33b3b;
-    }
-    button.danger:hover {
-      background: #9b3636;
-    }
-    main {
-      padding: 16px;
-      display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-      gap: 16px;
-    }
-    @media (max-width: 960px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
-    .card {
-      background: #11172a;
-      border-radius: 8px;
-      padding: 12px 14px;
-      border: 1px solid #202746;
-    }
-    .card h2 {
-      margin: 0 0 8px;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .card h2 span.sub {
+
+    header .subtitle {
       font-size: 12px;
-      color: #9ea4c8;
-      font-weight: normal;
+      color: #a6a9d4;
     }
-    .field-row {
+
+    main {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 8px;
+      flex-direction: column;
+      gap: 32px;
     }
+
+    section {
+      padding: 24px 20px 32px;
+    }
+
+    .stripe-1 {
+      background: radial-gradient(circle at top left, #181f3f 0, #050815 55%);
+      border-bottom: 1px solid #1c2342;
+    }
+
+    .stripe-2 {
+      background: radial-gradient(circle at top right, #151f3c 0, #050815 70%);
+      border-top: 1px solid #11162f;
+    }
+
+    .section-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title span.badge {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #252c55;
+      border: 1px solid #3a4584;
+      color: #c7d1ff;
+    }
+
+    .section-desc {
+      font-size: 13px;
+      color: #a8add6;
+    }
+
     textarea {
       width: 100%;
       min-height: 220px;
       resize: vertical;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #333c66;
-      background: #060916;
-      color: #f8f8f8;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #313a69;
+      background: #070a18;
+      color: #f5f5ff;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.5;
     }
+
+    textarea::placeholder {
+      color: #696f9c;
+    }
+
     .label {
       font-size: 13px;
-      color: #c0c4e0;
+      color: #c4c7ec;
+      margin-bottom: 6px;
+    }
+
+    .helper {
+      font-size: 11px;
+      color: #868bbb;
+      margin-top: 4px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #3943a6;
+      background: #2a3389;
+      color: #f5f5ff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, transform 0.05s, opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn span.icon {
+      font-size: 15px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #3c47c0;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #161a34;
+      border-color: #3a405f;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #202640;
+    }
+
+    .btn-green {
+      background: #1f6f46;
+      border-color: #28a567;
+    }
+
+    .btn-green:hover:not(:disabled) {
+      background: #2a9a63;
+    }
+
+    .btn-grey {
+      background: #272b3c;
+      border-color: #3e4256;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .progress-wrapper {
+      margin-top: 16px;
+    }
+
+    .progress-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #9aa1d4;
       margin-bottom: 4px;
     }
-    .status-pill {
+
+    .progress-bar-outer {
+      position: relative;
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      background: #15182b;
+      overflow: hidden;
+      border: 1px solid #272d4f;
+    }
+
+    .progress-bar-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #b32b39, #f55c4a);
+      transition: width 0.1s linear, background 0.2s;
+    }
+
+    .progress-bar-inner.done {
+      background: linear-gradient(90deg, #2e9f5d, #5be48f);
+    }
+
+    .progress-percentage {
+      font-size: 11px;
+      color: #d1d7ff;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .card {
+      border-radius: 10px;
+      border: 1px solid #252c4c;
+      background: rgba(7, 10, 25, 0.9);
+      padding: 14px 16px;
+      margin-top: 8px;
+    }
+
+    .scene-list {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .scene-item {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1.6fr) minmax(0, 1.3fr) auto;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      background: #090d22;
+      border: 1px solid #252c4c;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .scene-item {
+        grid-template-columns: 72px minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+      }
+      .scene-item > .scene-prompt {
+        grid-column: 1 / span 2;
+      }
+      .scene-item > .scene-actions {
+        grid-column: 1 / span 2;
+      }
+    }
+
+    .thumb {
+      width: 72px;
+      height: 48px;
+      border-radius: 6px;
+      background: radial-gradient(circle at 20% 20%, #ffffff33 0, #38408a 25%, #14162f 55%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #dde2ff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .thumb::after {
+      content: "";
+      position: absolute;
+      width: 85%;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ffffff55, transparent);
+      transform: rotate(-28deg);
+      top: 10%;
+      left: -30%;
+    }
+
+    .scene-text {
+      font-size: 13px;
+      color: #e3e6ff;
+    }
+
+    .scene-text small {
+      display: block;
+      font-size: 11px;
+      color: #8e94c1;
+      margin-top: 3px;
+    }
+
+    .scene-prompt {
+      font-size: 12px;
+      color: #b8bff3;
+    }
+
+    .scene-prompt-label {
+      font-size: 11px;
+      color: #8e94c1;
+      margin-bottom: 2px;
+    }
+
+    .scene-prompt-content {
+      font-size: 12px;
+      color: #d4d8ff;
+    }
+
+    .scene-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      font-size: 11px;
+      color: #9aa1d4;
+    }
+
+    .pill {
       display: inline-flex;
       align-items: center;
       gap: 4px;
       padding: 2px 8px;
       border-radius: 999px;
+      border: 1px solid #38406b;
+      background: #10152d;
       font-size: 11px;
-      border: 1px solid #394078;
-      background: #181f3a;
       color: #c0c6ff;
     }
-    .status-pill.ready {
-      border-color: #2c8c4a;
-      background: #163020;
-      color: #b9f3c6;
+
+    .pill.ready {
+      border-color: #2c8f57;
+      background: #14291f;
+      color: #bfeecf;
     }
-    .status-pill.generating {
-      border-color: #cfa53c;
-      background: #352a10;
-      color: #ffeaa8;
+
+    .pill.pending {
+      border-color: #91502e;
+      background: #26150f;
+      color: #ffd7b3;
     }
-    .status-pill.none {
-      border-color: #555;
-      background: #222;
-      color: #aaa;
-    }
-    .scene-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 480px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-    .scene-row {
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #202746;
-      background: #090f22;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .scene-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-    }
-    .scene-body {
-      font-size: 13px;
-      color: #d7dbff;
-    }
-    .scene-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: #9ea4c8;
-      flex-wrap: wrap;
-    }
-    .scene-footer a {
-      color: #83a4ff;
-      text-decoration: none;
-    }
-    .scene-footer a:hover {
-      text-decoration: underline;
-    }
-    .tag {
+
+    footer {
+      padding: 12px 20px 20px;
+      border-top: 1px solid #101632;
       font-size: 11px;
-      padding: 1px 6px;
-      border-radius: 999px;
-      border: 1px solid #34405f;
-      color: #a0a6d5;
-    }
-    .small-hint {
-      font-size: 11px;
-      color: #888fb8;
+      color: #7f85b4;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🕵️ 미스터리 영상 자동 생성 (MVP UI)</h1>
-
-    <input id="projectNameInput" type="text" placeholder="프로젝트명 입력" />
-    <button id="createProjectBtn">프로젝트 생성</button>
-    <button id="projectListBtn" class="secondary">프로젝트 리스트</button>
-    <button id="deleteProjectBtn" class="danger">프로젝트 삭제</button>
-
-    <div class="spacer"></div>
-    <span id="currentProjectLabel" class="small-hint">선택된 프로젝트 없음</span>
+    <div class="title">
+      <h1>StoryVision AI</h1>
+      <div class="subtitle">기묘한 밤 스타일 미스터리 영상화를 위한 텍스트 → 프롬프트 → 영상 생성 도우미 (MVP)</div>
+    </div>
   </header>
 
   <main>
-    <!-- 왼쪽: URL + 스크립트 -->
-    <section class="card">
-      <h2>
-        1. 원문 수집 & 스크립트 생성
-        <span class="sub">URL → 텍스트 → 14분 스크립트</span>
-      </h2>
+    <!-- 스트랩 1: 프롬프트 생성 -->
+    <section class="stripe-1">
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-title">
+            <span>스트랩 1 · 프롬프트 생성</span>
+            <span class="badge">STEP 1</span>
+          </div>
+          <div class="section-desc">
+            먼저 영상화하고 싶은 전체 스크립트를 아래에 붙여넣어 주세요.<br />
+            이 도구는 <strong>각 줄(줄바꿈 단위)마다 1개의 영상</strong>을 만든다고 가정하고,
+            문장별로 사용할 수 있는 <strong>영문 프롬프트</strong>를 생성합니다.
+          </div>
+        </div>
 
-      <div class="label">사건 소스 URL (나무위키 등)</div>
-      <div class="field-row">
-        <input id="sourceUrlInput" type="text" placeholder="https://namu.wiki/..." style="flex: 1;" />
-        <button id="startBtn">시작하기 (스크립트 생성)</button>
-      </div>
-      <div class="small-hint">
-        ※ 지금은 프론트 스텁이라 URL을 실제로 크롤링하진 않고, 입력값을 이용해 가짜 스크립트를 만듭니다. 나중에 백엔드에서 URL → 텍스트 크롤링 + LLM 연결.
-      </div>
+        <div class="card">
+          <div class="label">영상화하고 싶은 전체 문장을 넣어주세요.</div>
+          <textarea id="inputText" placeholder="예시)&#10;아이가 사라지는 데 걸린 시간, 단 20초.&#10;아버지가 집 안에 들어가 둘째 아이를 건네주고 다시 현관으로 나온 순간,&#10;네 살배기 아들은 세상에서 감쪽같이 사라져버렸습니다."></textarea>
+          <div class="helper">
+            - 줄바꿈(Enter) 기준으로 한 줄 = 한 영상 클립으로 처리됩니다.<br />
+            - 스크립트는 GPT에서 따로 작성한 뒤 이곳에 붙여넣는다고 가정합니다.
+          </div>
 
-      <hr style="border: none; border-top: 1px solid #202746; margin: 10px 0;" />
+          <div class="row">
+            <button id="generatePromptsBtn" class="btn">
+              <span class="icon">✨</span>
+              프롬프트 생성하기
+            </button>
+            <span class="helper">※ 버튼 클릭 시 비밀번호(9981)를 입력해야 실행됩니다.</span>
+          </div>
 
-      <div class="field-row" style="justify-content: space-between;">
-        <div class="label">생성된 스크립트</div>
-        <span id="scriptStatusBadge" class="status-pill none">스크립트 상태: 없음</span>
-      </div>
-      <textarea id="scriptText" placeholder="여기에 자동 생성된 스크립트가 표시됩니다."></textarea>
-
-      <div class="field-row" style="margin-top: 8px; justify-content: flex-end;">
-        <button id="saveScriptBtn" class="secondary">스크립트 저장</button>
-        <button id="convertToVideoBtn">이 스크립트로 영상 생성</button>
+          <div id="promptProgressWrapper" class="progress-wrapper hidden">
+            <div class="progress-label-row">
+              <span>프롬프트 생성 진행도</span>
+              <span id="promptStatusText">대기 중…</span>
+            </div>
+            <div class="progress-bar-outer">
+              <div id="promptProgressBar" class="progress-bar-inner"></div>
+            </div>
+            <div id="promptProgressPercent" class="progress-percentage">0%</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- 오른쪽: Scene & 영상 리스트 -->
-    <section class="card">
-      <h2>
-        2. 장면 & 영상 상태
-        <span class="sub">문장별 Scene & 영상 URL</span>
-      </h2>
-
-      <div class="field-row" style="justify-content: space-between; margin-bottom: 4px;">
-        <span class="label">Scene 리스트</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button id="mockGenerateScenesBtn" class="secondary">데모용 Scene 생성(가짜)</button>
-          <button id="downloadAllBtn" class="secondary">일괄 다운로드 (가상)</button>
+    <!-- 스트랩 2: 영상 생성 -->
+    <section class="stripe-2">
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-title">
+            <span>스트랩 2 · 영상 생성 관리</span>
+            <span class="badge">STEP 2</span>
+          </div>
+          <div class="section-desc">
+            스트랩 1에서 생성된 문장 + 영문 프롬프트를 바탕으로, 각 문장마다 1개의 영상을 만드는 과정을 시뮬레이션합니다.<br />
+            이후 실제 Minimax T2V API와 연결하면, 이 UI 그대로 문장별 영상 생성 상태를 관리할 수 있습니다.
+          </div>
         </div>
-      </div>
-      <div class="small-hint">
-        ※ 지금은 백엔드/API가 없어서 Scene과 영상 URL을 브라우저 메모리에만 저장합니다.
-        나중에 FastAPI로 교체하면 이 구조 그대로 API 호출만 바꾸면 됩니다.
-      </div>
 
-      <div id="scenesList" class="scene-list" style="margin-top: 8px;">
-        <!-- JS로 Scene들 렌더링 -->
+        <div class="card">
+          <div class="row" style="justify-content: space-between; align-items: center;">
+            <div class="helper">
+              - 먼저 스트랩 1에서 프롬프트를 생성한 뒤 사용하세요.<br />
+              - 각 문장/프롬프트에 대해 1개의 영상이 생성된다고 가정합니다.
+            </div>
+            <button id="generateVideosBtn" class="btn btn-secondary">
+              <span class="icon">🎬</span>
+              영상 생성하기
+            </button>
+          </div>
+
+          <div id="videoProgressWrapper" class="progress-wrapper hidden">
+            <div class="progress-label-row">
+              <span>영상 생성 진행도</span>
+              <span id="videoStatusText">대기 중…</span>
+            </div>
+            <div class="progress-bar-outer">
+              <div id="videoProgressBar" class="progress-bar-inner"></div>
+            </div>
+            <div id="videoProgressPercent" class="progress-percentage">0%</div>
+          </div>
+
+          <div class="row" style="justify-content: flex-end; margin-top: 16px;">
+            <button id="downloadAllBtn" class="btn btn-grey" disabled>
+              <span class="icon">📦</span>
+              일괄 다운로드 (모든 영상 완료 시 활성화)
+            </button>
+          </div>
+
+          <div id="sceneList" class="scene-list">
+            <!-- JS로 장면 리스트 렌더링 -->
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
-  <script>
-    // ===== 간단한 프론트 전용 상태 (MVP 프론트 스텁) =====
-    let projects = []; // { id, name, sourceUrl, scriptText, scriptStatus, videoStatus }
-    let scenes = [];   // { id, projectId, order, narrationKo, promptEn, status, videoUrl }
-    let currentProjectId = null;
-    let projectIdSeq = 1;
-    let sceneIdSeq = 1;
+  <footer>
+    StoryVision AI · 프론트엔드 MVP · 실제 GPT / Minimax 연동은 추후 백엔드에서 구현됩니다.
+  </footer>
 
+  <script>
+    // ===== 전역 상태 (브라우저 메모리) =====
+    let segments = []; // { id, lineKo, promptEn, videoStatus, videoUrl }
+    let promptGenerationInProgress = false;
+    let videoGenerationInProgress = false;
+
+    const PASSWORD = "9981";
+
+    // ===== DOM 헬퍼 =====
     const $ = (id) => document.getElementById(id);
 
-    const projectNameInput = $("projectNameInput");
-    const createProjectBtn = $("createProjectBtn");
-    const projectListBtn = $("projectListBtn");
-    const deleteProjectBtn = $("deleteProjectBtn");
-    const currentProjectLabel = $("currentProjectLabel");
+    const inputTextEl = $("inputText");
+    const generatePromptsBtn = $("generatePromptsBtn");
+    const promptProgressWrapper = $("promptProgressWrapper");
+    const promptProgressBar = $("promptProgressBar");
+    const promptProgressPercent = $("promptProgressPercent");
+    const promptStatusText = $("promptStatusText");
 
-    const sourceUrlInput = $("sourceUrlInput");
-    const startBtn = $("startBtn");
-    const scriptText = $("scriptText");
-    const scriptStatusBadge = $("scriptStatusBadge");
-    const saveScriptBtn = $("saveScriptBtn");
-    const convertToVideoBtn = $("convertToVideoBtn");
-
-    const scenesList = $("scenesList");
-    const mockGenerateScenesBtn = $("mockGenerateScenesBtn");
+    const generateVideosBtn = $("generateVideosBtn");
+    const videoProgressWrapper = $("videoProgressWrapper");
+    const videoProgressBar = $("videoProgressBar");
+    const videoProgressPercent = $("videoProgressPercent");
+    const videoStatusText = $("videoStatusText");
     const downloadAllBtn = $("downloadAllBtn");
+    const sceneListEl = $("sceneList");
 
-    // ===== 유틸 =====
-    function setScriptStatus(status) {
-      scriptStatusBadge.classList.remove("none", "generating", "ready");
-      if (status === "none") {
-        scriptStatusBadge.textContent = "스크립트 상태: 없음";
-        scriptStatusBadge.classList.add("none");
-      } else if (status === "generated") {
-        scriptStatusBadge.textContent = "스크립트 상태: 생성됨(미확정)";
-        scriptStatusBadge.classList.add("generating");
-      } else if (status === "confirmed") {
-        scriptStatusBadge.textContent = "스크립트 상태: 확정됨";
-        scriptStatusBadge.classList.add("ready");
+    // ===== 공통: 비밀번호 확인 =====
+    function checkPassword() {
+      const answer = prompt("관리자 비밀번호를 입력하세요. (힌트: 9981)");
+      if (answer === null) return false;
+      if (answer.trim() !== PASSWORD) {
+        alert("비밀번호가 올바르지 않습니다.");
+        return false;
       }
+      return true;
     }
 
-    function getCurrentProject() {
-      return projects.find(p => p.id === currentProjectId) || null;
-    }
-
-    function updateCurrentProjectLabel() {
-      const p = getCurrentProject();
-      if (!p) {
-        currentProjectLabel.textContent = "선택된 프로젝트 없음";
-      } else {
-        currentProjectLabel.textContent = `현재 프로젝트: ${p.name} (ID: ${p.id})`;
-      }
-    }
-
-    function renderScenes() {
-      const p = getCurrentProject();
-      scenesList.innerHTML = "";
-      if (!p) {
-        const div = document.createElement("div");
-        div.className = "small-hint";
-        div.textContent = "먼저 프로젝트를 생성하고 선택하세요.";
-        scenesList.appendChild(div);
+    // ===== 프롬프트 생성 (스트랩 1) =====
+    generatePromptsBtn.addEventListener("click", () => {
+      if (promptGenerationInProgress || videoGenerationInProgress) {
+        alert("현재 다른 작업이 진행 중입니다. 잠시만 기다려주세요.");
         return;
       }
 
-      const projectScenes = scenes
-        .filter(s => s.projectId === p.id)
-        .sort((a, b) => a.order - b.order);
+      if (!checkPassword()) return;
 
-      if (projectScenes.length === 0) {
-        const div = document.createElement("div");
-        div.className = "small-hint";
-        div.textContent = "아직 생성된 Scene이 없습니다. [이 스크립트로 영상 생성] 버튼을 눌러보세요.";
-        scenesList.appendChild(div);
+      const raw = inputTextEl.value;
+      const lines = raw.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+      if (lines.length === 0) {
+        alert("먼저 영상화하고 싶은 텍스트를 입력해주세요. (줄바꿈 기준으로 분리됩니다)");
         return;
       }
 
-      for (const s of projectScenes) {
-        const row = document.createElement("div");
-        row.className = "scene-row";
+      // 기존 데이터 초기화
+      segments = [];
+      for (let i = 0; i < lines.length; i++) {
+        segments.push({
+          id: i + 1,
+          lineKo: lines[i],
+          promptEn: "",
+          videoStatus: "pending", // "pending" | "ready"
+          videoUrl: null,
+        });
+      }
 
-        const header = document.createElement("div");
-        header.className = "scene-header";
+      renderSceneList(); // 아직 prompt는 비어있지만 리스트부터 그림
+      startPromptGenerationSimulation(lines);
+    });
 
-        const title = document.createElement("div");
-        title.textContent = `Scene ${s.order}`;
+    function startPromptGenerationSimulation(lines) {
+      promptGenerationInProgress = true;
+      generatePromptsBtn.disabled = true;
+      generateVideosBtn.disabled = true;
+      downloadAllBtn.disabled = true;
 
-        const status = document.createElement("span");
-        status.className = "status-pill " + (s.status === "ready" ? "ready" :
-                                             s.status === "generating" ? "generating" : "none");
-        status.textContent = "상태: " + s.status;
+      promptProgressWrapper.classList.remove("hidden");
+      promptProgressBar.classList.remove("done");
+      promptProgressBar.style.width = "0%";
+      promptProgressPercent.textContent = "0%";
+      promptStatusText.textContent = `프롬프트 생성 준비 중… (0 / ${lines.length})`;
 
-        header.appendChild(title);
-        header.appendChild(status);
+      let current = 0;
+      const total = lines.length;
+      const baseDelay = 150; // 한 줄당 0.15초 정도로 시뮬레이션
 
-        const body = document.createElement("div");
-        body.className = "scene-body";
-        body.textContent = s.narrationKo;
+      function step() {
+        if (current >= total) {
+          // 완료
+          promptGenerationInProgress = false;
+          promptProgressBar.classList.add("done");
+          promptProgressBar.style.width = "100%";
+          promptProgressPercent.textContent = "100%";
+          promptStatusText.textContent = `프롬프트 생성 완료! (${total}개)`;
 
-        const footer = document.createElement("div");
-        footer.className = "scene-footer";
-
-        const promptTag = document.createElement("span");
-        promptTag.className = "tag";
-        promptTag.textContent = "프롬프트 EN";
-
-        const promptPreview = document.createElement("span");
-        promptPreview.textContent = s.promptEn.slice(0, 80) + (s.promptEn.length > 80 ? "..." : "");
-
-        const left = document.createElement("div");
-        left.style.display = "flex";
-        left.style.alignItems = "center";
-        left.style.gap = "6px";
-        left.appendChild(promptTag);
-        left.appendChild(promptPreview);
-
-        const right = document.createElement("div");
-        if (s.videoUrl) {
-          const link = document.createElement("a");
-          link.href = s.videoUrl;
-          link.target = "_blank";
-          link.textContent = "영상 열기";
-          right.appendChild(link);
-        } else {
-          const span = document.createElement("span");
-          span.textContent = "영상 URL 없음 (가짜 데이터 또는 생성 전)";
-          right.appendChild(span);
+          generatePromptsBtn.disabled = false;
+          generateVideosBtn.disabled = false;
+          renderSceneList();
+          return;
         }
 
-        footer.appendChild(left);
-        footer.appendChild(right);
+        // "GPT로 프롬프트 생성" 시뮬레이션
+        const line = lines[current];
+        const englishPrompt =
+          `Cinematic documentary shot for: "${line.slice(0, 40)}..." in a dark, mysterious tone, subtle camera movement, gloomy atmosphere.`;
 
-        row.appendChild(header);
-        row.appendChild(body);
-        row.appendChild(footer);
+        segments[current].promptEn = englishPrompt;
 
-        scenesList.appendChild(row);
+        current++;
+        const progress = Math.round((current / total) * 100);
+        promptProgressBar.style.width = progress + "%";
+        promptProgressPercent.textContent = progress + "%";
+        promptStatusText.textContent = `프롬프트 생성 중… (${current} / ${total})`;
+
+        renderSceneList();
+
+        setTimeout(step, baseDelay);
+      }
+
+      setTimeout(step, 200);
+    }
+
+    // ===== 영상 생성 (스트랩 2) =====
+    generateVideosBtn.addEventListener("click", () => {
+      if (videoGenerationInProgress || promptGenerationInProgress) {
+        alert("현재 다른 작업이 진행 중입니다. 잠시만 기다려주세요.");
+        return;
+      }
+
+      if (!checkPassword()) return;
+
+      if (segments.length === 0) {
+        alert("먼저 스트랩 1에서 프롬프트를 생성해주세요.");
+        return;
+      }
+
+      const missingPrompt = segments.some(s => !s.promptEn || s.promptEn.trim() === "");
+      if (missingPrompt) {
+        alert("프롬프트가 아직 생성되지 않은 문장이 있습니다. 스트랩 1 작업을 다시 확인해주세요.");
+        return;
+      }
+
+      startVideoGenerationSimulation();
+    });
+
+    function startVideoGenerationSimulation() {
+      videoGenerationInProgress = true;
+      generateVideosBtn.disabled = true;
+      generatePromptsBtn.disabled = true;
+      downloadAllBtn.disabled = true;
+
+      videoProgressWrapper.classList.remove("hidden");
+      videoProgressBar.classList.remove("done");
+      videoProgressBar.style.width = "0%";
+      videoProgressPercent.textContent = "0%";
+
+      const total = segments.length;
+      let current = 0;
+
+      videoStatusText.textContent = `영상 생성 준비 중… (0 / ${total})`;
+
+      const baseDelay = 450; // 한 편당 0.45초 정도로 시뮬레이션
+
+      function step() {
+        if (current >= total) {
+          // 완료
+          videoGenerationInProgress = false;
+          videoProgressBar.classList.add("done");
+          videoProgressBar.style.width = "100%";
+          videoProgressPercent.textContent = "100%";
+          videoStatusText.textContent = `영상 생성 완료! (${total}개)`;
+
+          generateVideosBtn.disabled = false;
+          generatePromptsBtn.disabled = false;
+          downloadAllBtn.disabled = false; // 전체 완료 시 활성화
+          return;
+        }
+
+        // "Minimax T2V 영상 생성" 시뮬레이션
+        const seg = segments[current];
+        seg.videoStatus = "ready";
+        seg.videoUrl = `https://example.com/video_${String(seg.id).padStart(3, "0")}.mp4`;
+
+        current++;
+        const progress = Math.round((current / total) * 100);
+        videoProgressBar.style.width = progress + "%";
+        videoProgressPercent.textContent = progress + "%";
+        videoStatusText.textContent = `영상 생성 중… (${current} / ${total})`;
+
+        renderSceneList();
+
+        setTimeout(step, baseDelay);
+      }
+
+      setTimeout(step, 300);
+    }
+
+    // ===== Scene 리스트 렌더링 =====
+    function renderSceneList() {
+      sceneListEl.innerHTML = "";
+
+      if (segments.length === 0) {
+        const div = document.createElement("div");
+        div.className = "helper";
+        div.textContent = "아직 문장/프롬프트가 없습니다. 스트랩 1에서 먼저 프롬프트를 생성해주세요.";
+        sceneListEl.appendChild(div);
+        return;
+      }
+
+      for (const seg of segments) {
+        const item = document.createElement("div");
+        item.className = "scene-item";
+
+        // 썸네일
+        const thumb = document.createElement("div");
+        thumb.className = "thumb";
+        thumb.textContent = "▶";
+
+        // 문장
+        const textBlock = document.createElement("div");
+        textBlock.className = "scene-text";
+        const lineTitle = document.createElement("div");
+        lineTitle.textContent = `문장 ${seg.id}`;
+        const lineContent = document.createElement("small");
+        lineContent.textContent = seg.lineKo;
+        textBlock.appendChild(lineTitle);
+        textBlock.appendChild(lineContent);
+
+        // 프롬프트
+        const promptBlock = document.createElement("div");
+        promptBlock.className = "scene-prompt";
+        const promptLabel = document.createElement("div");
+        promptLabel.className = "scene-prompt-label";
+        promptLabel.textContent = "영문 프롬프트";
+        const promptContent = document.createElement("div");
+        promptContent.className = "scene-prompt-content";
+        promptContent.textContent = seg.promptEn || "(아직 프롬프트 미생성)";
+        promptBlock.appendChild(promptLabel);
+        promptBlock.appendChild(promptContent);
+
+        // 액션/상태
+        const actionBlock = document.createElement("div");
+        actionBlock.className = "scene-actions";
+
+        const statusPill = document.createElement("span");
+        statusPill.className = "pill " + (seg.videoStatus === "ready" ? "ready" : "pending");
+        statusPill.textContent =
+          seg.videoStatus === "ready" ? "영상 생성 완료" : "영상 생성 대기";
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.className = "btn " + (seg.videoStatus === "ready" ? "btn-green" : "btn-grey");
+        downloadBtn.style.padding = "5px 10px";
+        downloadBtn.style.fontSize = "12px";
+        downloadBtn.innerHTML = '<span class="icon">⬇</span>다운로드';
+
+        if (seg.videoStatus === "ready" && seg.videoUrl) {
+          downloadBtn.disabled = false;
+          downloadBtn.addEventListener("click", () => {
+            // 실제로는 seg.videoUrl로 이동/다운로드
+            window.open(seg.videoUrl, "_blank");
+          });
+        } else {
+          downloadBtn.disabled = true;
+        }
+
+        actionBlock.appendChild(statusPill);
+        actionBlock.appendChild(downloadBtn);
+
+        item.appendChild(thumb);
+        item.appendChild(textBlock);
+        item.appendChild(promptBlock);
+        item.appendChild(actionBlock);
+
+        sceneListEl.appendChild(item);
       }
     }
 
-    // ===== 이벤트: 프로젝트 생성 =====
-    createProjectBtn.addEventListener("click", () => {
-      const name = projectNameInput.value.trim();
-      if (!name) {
-        alert("프로젝트명을 입력하세요.");
-        return;
-      }
-      const newProject = {
-        id: projectIdSeq++,
-        name,
-        sourceUrl: "",
-        scriptText: "",
-        scriptStatus: "none",
-        videoStatus: "none",
-        createdAt: new Date().toISOString()
-      };
-      projects.push(newProject);
-      currentProjectId = newProject.id;
-      projectNameInput.value = "";
-      alert(`프로젝트 생성: ${newProject.name} (ID: ${newProject.id})`);
-      updateCurrentProjectLabel();
-      scriptText.value = "";
-      setScriptStatus("none");
-      renderScenes();
-
-      // TODO: 나중에 여기에서 백엔드 POST /projects 호출로 변경
-    });
-
-    // ===== 이벤트: 프로젝트 리스트 (간단 alert) =====
-    projectListBtn.addEventListener("click", () => {
-      if (projects.length === 0) {
-        alert("프로젝트가 아직 없습니다.");
-        return;
-      }
-      const listText = projects
-        .map(p => `ID: ${p.id}, 이름: ${p.name}`)
-        .join("\n");
-      const chosen = prompt("프로젝트 리스트:\n\n" + listText + "\n\n선택할 프로젝트 ID를 입력하세요:");
-      if (!chosen) return;
-      const id = parseInt(chosen, 10);
-      const p = projects.find(p => p.id === id);
-      if (!p) {
-        alert("해당 ID의 프로젝트가 없습니다.");
-        return;
-      }
-      currentProjectId = p.id;
-      updateCurrentProjectLabel();
-      scriptText.value = p.scriptText || "";
-      setScriptStatus(p.scriptStatus || "none");
-      sourceUrlInput.value = p.sourceUrl || "";
-      renderScenes();
-
-      // TODO: 나중에 GET /projects, GET /projects/{id}로 대체
-    });
-
-    // ===== 이벤트: 프로젝트 삭제 =====
-    deleteProjectBtn.addEventListener("click", () => {
-      const p = getCurrentProject();
-      if (!p) {
-        alert("현재 선택된 프로젝트가 없습니다.");
-        return;
-      }
-      if (!confirm(`정말로 프로젝트 "${p.name}" (ID: ${p.id}) 를 삭제하시겠습니까?`)) return;
-      projects = projects.filter(x => x.id !== p.id);
-      scenes = scenes.filter(s => s.projectId !== p.id);
-      currentProjectId = null;
-      updateCurrentProjectLabel();
-      scriptText.value = "";
-      setScriptStatus("none");
-      sourceUrlInput.value = "";
-      renderScenes();
-      alert("프로젝트가 삭제되었습니다.");
-
-      // TODO: 나중에 DELETE /projects/{id}
-    });
-
-    // ===== 이벤트: 시작하기 (URL → 스크립트 생성 - 현재는 가짜) =====
-    startBtn.addEventListener("click", () => {
-      const p = getCurrentProject();
-      if (!p) {
-        alert("먼저 프로젝트를 생성하세요.");
-        return;
-      }
-      const url = sourceUrlInput.value.trim();
-      if (!url) {
-        alert("URL을 입력하세요.");
-        return;
-      }
-      // 지금은 가짜 스크립트 생성 로직
-      const fakeScript =
-        `이 스크립트는 데모용으로 자동 생성된 가짜 스크립트입니다.\n` +
-        `소스 URL: ${url}\n\n` +
-        `1. 사건의 도입부를 설명하는 문장...\n` +
-        `2. 사건의 배경과 피해자에 대한 설명...\n` +
-        `3. 사건 당일의 정황 묘사...\n` +
-        `4. 수사 과정과 미스터리 포인트...\n` +
-        `5. 아직 풀리지 않은 의문과 여운...\n`;
-
-      p.sourceUrl = url;
-      p.scriptText = fakeScript;
-      p.scriptStatus = "generated";
-
-      scriptText.value = fakeScript;
-      setScriptStatus("generated");
-
-      alert("가짜 스크립트가 생성되었습니다. 나중에 이 부분을 LLM API 호출로 교체합니다.");
-
-      // TODO: 실제로는 백엔드에 POST /projects/{id}/generate_script
-    });
-
-    // ===== 이벤트: 스크립트 저장 =====
-    saveScriptBtn.addEventListener("click", () => {
-      const p = getCurrentProject();
-      if (!p) {
-        alert("먼저 프로젝트를 선택하세요.");
-        return;
-      }
-      const text = scriptText.value.trim();
-      if (!text) {
-        if (!confirm("스크립트 내용이 비어 있습니다. 그래도 저장하시겠습니까?")) return;
-      }
-      p.scriptText = text;
-      p.scriptStatus = "confirmed";
-      setScriptStatus("confirmed");
-      alert("스크립트를 이 버전으로 확정했습니다.");
-
-      // TODO: 실제로는 POST /projects/{id}/confirm_script
-    });
-
-    // ===== 이벤트: 영상 생성 (스크립트 → Scene 분할 + 프롬프트 + T2V) 현재는 가짜 Scene 생성 =====
-    convertToVideoBtn.addEventListener("click", () => {
-      const p = getCurrentProject();
-      if (!p) {
-        alert("먼저 프로젝트를 선택하세요.");
-        return;
-      }
-      if (!p.scriptText) {
-        alert("스크립트가 없습니다. 먼저 스크립트를 생성/저장하세요.");
-        return;
-      }
-
-      // 지금은 아주 단순하게 줄 단위로 나눠서 Scene 생성 (가짜)
-      const lines = p.scriptText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-      const newScenes = [];
-      let order = 1;
-      for (const line of lines) {
-        const s = {
-          id: sceneIdSeq++,
-          projectId: p.id,
-          order: order++,
-          narrationKo: line,
-          promptEn: `Cinematic scene for: "${line.slice(0, 30)}..." in a dark, mysterious documentary style. [Tracking shot]`,
-          status: "ready", // 실제론 pending → generating → ready
-          videoUrl: `https://example.com/fake_video_${p.id}_${order - 1}.mp4`
-        };
-        newScenes.push(s);
-      }
-
-      // 기존 Scene은 싹 지우고 새로 생성 (MVP 간단화)
-      scenes = scenes.filter(s => s.projectId !== p.id).concat(newScenes);
-      renderScenes();
-      alert("가짜 Scene과 영상 URL들이 생성되었습니다. 나중에 이 부분을 LLM + Minimax T2V API 호출로 교체합니다.");
-
-      // TODO:
-      // 1) 백엔드 POST /projects/{id}/generate_scenes_and_videos
-      // 2) 백엔드에서 LLM으로 scene 분할 + prompt 생성
-      // 3) Minimax /video_generation, /query... 호출 후 실제 videoUrl 저장
-      // 4) 프론트는 GET /projects/{id}/scenes 로 주기적 조회
-    });
-
-    // ===== 데모용 Scene 생성 버튼 (현재 프로젝트에 임의 Scene 추가) =====
-    mockGenerateScenesBtn.addEventListener("click", () => {
-      const p = getCurrentProject();
-      if (!p) {
-        alert("먼저 프로젝트를 선택하세요.");
-        return;
-      }
-      const baseOrder = scenes.filter(s => s.projectId === p.id).length + 1;
-      const s1 = {
-        id: sceneIdSeq++,
-        projectId: p.id,
-        order: baseOrder,
-        narrationKo: "1989년 3월 7일, 일본 시코쿠의 작은 마을에서 한 아이가 사라졌다.",
-        promptEn: "A quiet Japanese rural town at dusk, empty streets and dim street lamps. [Slow pan]",
-        status: "ready",
-        videoUrl: "https://example.com/demo_scene1.mp4"
-      };
-      const s2 = {
-        id: sceneIdSeq++,
-        projectId: p.id,
-        order: baseOrder + 1,
-        narrationKo: "아이의 아버지는 잠시 집 안에 들어갔다 나온 사이, 네 살배기 아들이 사라진 것을 깨닫는다.",
-        promptEn: "A worried father rushing out of a small wooden house, looking around frantically. [Handheld shot]",
-        status: "ready",
-        videoUrl: "https://example.com/demo_scene2.mp4"
-      };
-      scenes.push(s1, s2);
-      renderScenes();
-      alert("데모용 Scene 2개를 추가했습니다.");
-    });
-
-    // ===== 일괄 다운로드 (지금은 그냥 URL 목록 alert) =====
+    // ===== 일괄 다운로드 (MVP: URL 리스트 출력) =====
     downloadAllBtn.addEventListener("click", () => {
-      const p = getCurrentProject();
-      if (!p) {
-        alert("먼저 프로젝트를 선택하세요.");
+      if (segments.length === 0) {
+        alert("다운로드할 영상이 없습니다.");
         return;
       }
-      const projectScenes = scenes
-        .filter(s => s.projectId === p.id)
-        .sort((a, b) => a.order - b.order);
-
-      if (projectScenes.length === 0) {
-        alert("다운로드할 Scene이 없습니다.");
+      const incomplete = segments.some(s => s.videoStatus !== "ready" || !s.videoUrl);
+      if (incomplete) {
+        alert("아직 생성되지 않은 영상이 있습니다.");
         return;
       }
 
-      const urls = projectScenes
-        .map(s => `Scene ${s.order}: ${s.videoUrl || "(URL 없음)"}`)
+      const urls = segments
+        .map(s => `문장 ${s.id}: ${s.videoUrl}`)
         .join("\n");
 
-      alert("MVP 스텁: 일괄 다운로드 기능은 나중에 구현.\n\n현재 Scene별 영상 URL 목록:\n\n" + urls);
-
-      // TODO: 실제 구현
-      // 1) 백엔드 GET /projects/{id}/download_zip → ZIP 파일 다운로드
-      // 2) 이 버튼에서 해당 ZIP 링크로 이동
+      // 실제 구현에서는 ZIP 생성/다운로드 링크를 사용할 것.
+      alert("MVP 스텁: 아래 URL들을 이용해 영상 파일을 다운로드할 수 있습니다.\n\n" + urls);
     });
 
     // 초기 렌더
-    updateCurrentProjectLabel();
-    setScriptStatus("none");
-    renderScenes();
+    renderSceneList();
   </script>
 </body>
 </html>
-
