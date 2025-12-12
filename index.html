@@ -8,7 +8,7 @@
     * { box-sizing: border-box; }
 
     body {
-      margin: 0;
+      margin: 0;      
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #050815;
       color: #f5f5ff;
@@ -492,6 +492,9 @@
   </footer>
 
   <script>
+    //server add
+    const API_BASE = "https://storyvision-backend.onrender.com";
+
     // ===== 전역 상태 (브라우저 메모리) =====
     let segments = []; // { id, lineKo, promptEn, videoStatus, videoUrl }
     let promptGenerationInProgress = false;
@@ -528,12 +531,59 @@
       return true;
     }
 
+    // 서버 호출 함수
+    function callGeneratePromptsAPI(lines) {
+  promptStatusText.textContent = "서버에 요청 중…";
+
+  fetch(`${API_BASE}/generate-prompts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ lines }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      data.items.forEach(item => {
+        const seg = segments.find(s => s.id === item.id);
+        if (seg) {
+          seg.promptEn = item.prompt_en;
+        }
+      });
+
+      renderSceneList();
+      promptStatusText.textContent = "프롬프트 생성 완료!";
+    })
+    .catch(err => {
+      alert("서버 오류: " + err.message);
+    });
+}
+
+
     // ===== 프롬프트 생성 (스트랩 1) =====
     generatePromptsBtn.addEventListener("click", () => {
-      if (promptGenerationInProgress || videoGenerationInProgress) {
-        alert("현재 다른 작업이 진행 중입니다. 잠시만 기다려주세요.");
-        return;
-      }
+  if (!checkPassword()) return;
+
+  const raw = inputTextEl.value;
+  const lines = raw.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) {
+    alert("텍스트를 입력해주세요.");
+    return;
+  }
+
+  // 초기화
+  segments = lines.map((line, idx) => ({
+    id: idx + 1,
+    lineKo: line,
+    promptEn: "",
+    videoStatus: "pending",
+    videoUrl: null,
+  }));
+
+  renderSceneList();
+  callGeneratePromptsAPI(lines);
+});
+
 
       if (!checkPassword()) return;
 
