@@ -93,9 +93,16 @@
       color: #fff;
       cursor: pointer;
     }
-    .btn-secondary { background: #161a34; border-color:#3a405f; }
-    .btn-green { background:#1f6f46; border-color:#28a567; }
-    .btn-orange { background:#7a3f13; border-color:#b8641b; }
+    
+    .btn-secondary {
+      background: #161a34;
+      border-color: #3a405f;
+    }
+
+    .btn-green {
+      background: #1f6f46;
+      border-color: #28a567;
+    }
 
     .scene-list {
       margin-top: 12px;
@@ -106,7 +113,7 @@
 
     .scene-item {
       display: grid;
-      grid-template-columns: 72px minmax(0,1.6fr) minmax(0,1.3fr) auto;
+      grid-template-columns: 72px minmax(0, 1.6fr) minmax(0, 1.3fr) auto;
       gap: 10px;
       padding: 10px;
       border-radius: 8px;
@@ -121,28 +128,44 @@
       border-radius: 6px;
       background: #14162f;
       display: flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
     }
 
     .pill {
-      display:inline-block;
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:11px;
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
     }
-    .pill.ready { border:1px solid #2c8f57; background:#14291f; color:#bfeecf; }
-    .pill.pending { border:1px solid #91502e; background:#26150f; color:#ffd7b3; }
 
-    footer { padding:20px; text-align:center; font-size:11px; color:#7f85b4; }
+    .pill.ready {
+      border: 1px solid #2c8f57;
+      background: #14291f;
+      color: #bfeecf;
+    }
+
+    .pill.pending {
+      border: 1px solid #91502e;
+      background: #26150f;
+      color: #ffd7b3;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 11px;
+      color: #7f85b4;
+      border-top: 1px solid #101632;
+    }
   </style>
 </head>
 
 <body>
 <header>
   <h1>StoryVision AI</h1>
-  <div class="subtitle">기묘한 밤 스타일 미스터리 영상화를 위한 텍스트 → 프롬프트 → 영상 생성 도우미</div>
+  <div class="subtitle">기묘한 밤 스타일 미스터리 영상화를 위한 텍스트 → 프롬프트 → 영상 생성 도우미 (MVP)</div>
 </header>
 
 <main>
@@ -156,7 +179,9 @@
 
     <textarea id="inputText"></textarea>
 
-    <button id="generatePromptsBtn" class="btn">✨ 프롬프트 생성하기</button>
+    <button id="generatePromptsBtn" class="btn">
+      ✨ 프롬프트 생성하기
+    </button>
 
     <div id="promptProgressWrapper" class="hidden">
       <div id="promptStatusText"></div>
@@ -195,6 +220,7 @@
 
 <footer>StoryVision AI · MVP</footer>
 
+
 <script>
 let segments = [];
 let promptGenerationInProgress = false;
@@ -203,7 +229,6 @@ const PASSWORD = "9981";
 
 const $ = (id) => document.getElementById(id);
 
-/* UI Elements */
 const inputTextEl = $("inputText");
 const generatePromptsBtn = $("generatePromptsBtn");
 const promptProgressWrapper = $("promptProgressWrapper");
@@ -220,42 +245,51 @@ const videoStatusText = $("videoStatusText");
 const sceneListEl = $("sceneList");
 const downloadAllBtn = $("downloadAllBtn");
 
+
 function checkPassword() {
-  return prompt("관리자 비밀번호를 입력하세요") === PASSWORD;
+  const answer = prompt("관리자 비밀번호를 입력하세요");
+  return answer === PASSWORD;
 }
+
 
 /* ------------------------------
    STEP 1 — 프롬프트 생성
-------------------------------*/
+--------------------------------*/
 generatePromptsBtn.addEventListener("click", () => {
   if (!checkPassword()) return;
 
-  const lines = inputTextEl.value.trim().split("\n").map(v=>v.trim()).filter(v=>v);
+  const raw = inputTextEl.value.trim();
+  const lines = raw.split("\n").map(v => v.trim()).filter(v => v);
 
   segments = lines.map((line, idx) => ({
-    id: idx+1,
+    id: idx + 1,
     lineKo: line,
     promptEn: "",
     videoStatus: "pending",
 
-    // minimax info
+    // Minimax 확장 필드 (초기 null)
     videoUrl: null,
     thumbnailUrl: null,
     duration: null,
     resolution: null,
     model: null,
     version: null,
+    originalPrompt: null
   }));
 
   renderSceneList();
-  simulatePromptGeneration(lines);
+  startPromptGenerationSimulation(lines);
 });
 
-function simulatePromptGeneration(lines) {
+
+function startPromptGenerationSimulation(lines) {
   promptGenerationInProgress = true;
   generatePromptsBtn.disabled = true;
 
   promptProgressWrapper.classList.remove("hidden");
+  promptProgressBar.style.width = "0%";
+  promptProgressPercent.textContent = "0%";
+
   let current = 0;
   const total = lines.length;
 
@@ -263,40 +297,50 @@ function simulatePromptGeneration(lines) {
     if (current >= total) {
       promptGenerationInProgress = false;
       generatePromptsBtn.disabled = false;
+
       promptProgressBar.style.width = "100%";
       promptProgressPercent.textContent = "100%";
       promptStatusText.textContent = "프롬프트 생성 완료!";
       return;
     }
 
+    const line = lines[current];
     segments[current].promptEn =
-      `Documentary-style cinematic shot for: "${lines[current].slice(0,40)}..." in a dark, mysterious atmosphere`;
+      `Documentary-style cinematic shot for: "${line.slice(0, 40)}..." in a dark, mysterious atmosphere, subtle camera movement, gloomy lighting.`;
 
     current++;
-    let pct = Math.round((current/total)*100);
-    promptProgressBar.style.width = pct+"%";
-    promptProgressPercent.textContent = pct+"%";
-    promptStatusText.textContent = `프롬프트 생성 중 (${current}/${total})`;
+    const pct = Math.round((current / total) * 100);
+
+    promptProgressBar.style.width = pct + "%";
+    promptProgressPercent.textContent = pct + "%";
+    promptStatusText.textContent = `프롬프트 생성 중… (${current}/${total})`;
 
     renderSceneList();
     setTimeout(step, 150);
   }
+
   step();
 }
 
+
 /* ------------------------------
-   STEP 2 — 전체 영상 생성
-------------------------------*/
+   STEP 2 — 영상 생성 시뮬레이션
+--------------------------------*/
 generateVideosBtn.addEventListener("click", () => {
   if (!checkPassword()) return;
-  simulateFullVideoGeneration();
+
+  startVideoGenerationSimulation();
 });
 
-function simulateFullVideoGeneration() {
+
+function startVideoGenerationSimulation() {
   videoGenerationInProgress = true;
   generateVideosBtn.disabled = true;
 
   videoProgressWrapper.classList.remove("hidden");
+  videoProgressBar.style.width = "0%";
+  videoProgressPercent.textContent = "0%";
+
   let current = 0;
   const total = segments.length;
 
@@ -312,13 +356,24 @@ function simulateFullVideoGeneration() {
       return;
     }
 
-    applyFakeVideoData(segments[current]);
+    // ---- 영상 생성 완료 후 Minimax 데이터 반영 (더미) ----
+    const seg = segments[current];
+    seg.videoStatus = "ready";
+    seg.videoUrl = `https://example.com/video_${String(seg.id).padStart(3, "0")}.mp4`;
+    seg.thumbnailUrl = `https://picsum.photos/seed/thumb${seg.id}/200/120`;
+
+    seg.duration = 10 + (seg.id % 6);
+    seg.resolution = "1080p";
+    seg.model = "t2v-beta";
+    seg.version = "v1.0";
+    seg.originalPrompt = seg.promptEn;
 
     current++;
-    let pct = Math.round((current/total)*100);
-    videoProgressBar.style.width = pct+"%";
-    videoProgressPercent.textContent = pct+"%";
-    videoStatusText.textContent = `영상 생성 중 (${current}/${total})`;
+    const pct = Math.round((current / total) * 100);
+
+    videoProgressBar.style.width = pct + "%";
+    videoProgressPercent.textContent = pct + "%";
+    videoStatusText.textContent = `영상 생성 중… (${current}/${total})`;
 
     renderSceneList();
     setTimeout(step, 350);
@@ -327,49 +382,10 @@ function simulateFullVideoGeneration() {
   step();
 }
 
-/* ------------------------------
-   🔄 단일 재생성 기능
-------------------------------*/
-function regenerateSingleVideo(segId) {
-  const seg = segments.find(s => s.id === segId);
-  if (!seg) return;
-
-  // 초기화
-  seg.videoStatus = "pending";
-  seg.videoUrl = null;
-  seg.thumbnailUrl = null;
-  seg.duration = null;
-  seg.resolution = null;
-  seg.model = null;
-  seg.version = null;
-
-  renderSceneList();
-
-  // 개별 렌더링 실행
-  startSingleVideoGeneration(seg);
-}
-
-function startSingleVideoGeneration(seg) {
-  // 0.3초 후 개별 렌더 완료 시뮬레이션
-  setTimeout(() => {
-    applyFakeVideoData(seg);
-    renderSceneList();
-  }, 600);
-}
-
-function applyFakeVideoData(seg) {
-  seg.videoStatus = "ready";
-  seg.videoUrl = `https://example.com/video_${String(seg.id).padStart(3,"0")}.mp4`;
-  seg.thumbnailUrl = `https://picsum.photos/seed/thumb${seg.id}/200/120`;
-  seg.duration = 10 + (seg.id % 6);
-  seg.resolution = "1080p";
-  seg.model = "t2v-beta";
-  seg.version = "v1.0";
-}
 
 /* ------------------------------
-   Scene 렌더링
-------------------------------*/
+   Scene List Renderer
+--------------------------------*/
 function renderSceneList() {
   sceneListEl.innerHTML = "";
 
@@ -377,46 +393,67 @@ function renderSceneList() {
     const item = document.createElement("div");
     item.className = "scene-item";
 
+    // 썸네일
     const thumb = document.createElement("div");
     thumb.className = "thumb";
     thumb.textContent = "▶";
 
+    // 문장
     const textBlock = document.createElement("div");
     textBlock.innerHTML = `
       <div style="font-size:13px;">문장 ${seg.id}</div>
       <small style="color:#8e94c1;">${seg.lineKo}</small>
     `;
 
+    // 프롬프트 + Minimax 정보
     const promptBlock = document.createElement("div");
     promptBlock.innerHTML = `
       <div style="font-size:11px;color:#8e94c1;">영문 프롬프트</div>
-      <div style="font-size:12px;color:#d4d8ff;">${seg.promptEn || "(미생성)"}</div>
+      <div style="font-size:12px;color:#d4d8ff;">${seg.promptEn || "(생성 전)"}</div>
     `;
 
+    // -------- Minimax 정보 출력 (ready 상태일 때만) --------
+    if (seg.videoStatus === "ready") {
+      const info = document.createElement("div");
+      info.style.marginTop = "6px";
+      info.style.fontSize = "11px";
+      info.style.color = "#9bb0ff";
+      info.style.lineHeight = "1.45";
+
+      info.innerHTML = `
+        <div><strong>영상 길이:</strong> ${seg.duration}s</div>
+        <div><strong>해상도:</strong> ${seg.resolution}</div>
+        <div><strong>모델:</strong> ${seg.model}</div>
+        <div><strong>버전:</strong> ${seg.version}</div>
+        <div style="margin-top:4px;"><strong>오리지널 프롬프트:</strong></div>
+        <div style="color:#d0d8ff;">${seg.originalPrompt}</div>
+      `;
+
+      promptBlock.appendChild(info);
+    }
+
+    // 액션
     const actionBlock = document.createElement("div");
 
     const pill = document.createElement("span");
     pill.className = "pill " + (seg.videoStatus === "ready" ? "ready" : "pending");
-    pill.textContent = seg.videoStatus === "ready" ? "완료" : "대기";
+    pill.textContent = seg.videoStatus === "ready" ? "생성 완료" : "대기 중";
 
     const dlBtn = document.createElement("button");
     dlBtn.className = "btn btn-green";
     dlBtn.style.fontSize = "12px";
     dlBtn.style.padding = "4px 10px";
-    dlBtn.textContent = "⬇ 다운로드";
-    dlBtn.disabled = seg.videoStatus !== "ready";
-    if (!dlBtn.disabled) dlBtn.onclick = ()=>window.open(seg.videoUrl,"_blank");
+    dlBtn.textContent = "다운로드";
 
-    const regenBtn = document.createElement("button");
-    regenBtn.className = "btn btn-orange";
-    regenBtn.style.fontSize = "12px";
-    regenBtn.style.padding = "4px 10px";
-    regenBtn.textContent = "🔄 재생성";
-    regenBtn.onclick = () => regenerateSingleVideo(seg.id);
+    if (seg.videoStatus === "ready") {
+      dlBtn.disabled = false;
+      dlBtn.onclick = () => window.open(seg.videoUrl, "_blank");
+    } else {
+      dlBtn.disabled = true;
+    }
 
     actionBlock.appendChild(pill);
     actionBlock.appendChild(dlBtn);
-    actionBlock.appendChild(regenBtn);
 
     item.appendChild(thumb);
     item.appendChild(textBlock);
