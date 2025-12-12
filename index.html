@@ -591,18 +591,61 @@ async function requestPromptGeneration(lines) {
 /* -----------------------------
    2) 영상 생성 (시뮬레이션 그대로 유지)
 ------------------------------ */
-generateVideosBtn.addEventListener("click", () => {
+generateVideosBtn.addEventListener("click", async () => {
   if (!checkPassword()) return;
-
   if (segments.length === 0) return alert("먼저 프롬프트를 생성하세요.");
-  if (segments.some(s => !s.promptEn || s.promptStatus !== "ready")) {
-    return alert("아직 프롬프트가 생성되지 않았거나 실패한 문장이 있습니다.");
-  }
+  if (segments.some(s => !s.promptEn)) return alert("아직 프롬프트가 생성되지 않은 문장이 있습니다.");
 
-  startVideoGenerationSimulation();
+  try {
+    await startVideoGenerationReal();
+  } catch (e) {
+    alert("영상 생성 오류: " + e.message);
+    videoGenerationInProgress = false;
+    generateVideosBtn.disabled = false;
+    generatePromptsBtn.disabled = false;
+  }
 });
 
-function startVideoGenerationSimulation() {
+async function createVideoJob(promptEn) {
+  const res = await fetch(`${API_BASE}/video-jobs`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      prompt: promptEn,
+      model: "MiniMax-Hailuo-2.3",
+      duration: 6,
+      resolution: "768P",
+      prompt_optimizer: true,
+      fast_pretreatment: false
+    })
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.detail || `createVideoJob failed: ${res.status}`);
+  return json; // { job_id, status, minimax_task_id }
+}
+
+async function getVideoJob(jobId) {
+  const res = await fetch(`${API_BASE}/video-jobs/${jobId}`);
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.detail || `getVideoJob failed: ${res.status}`);
+  return json;
+}
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+// 동시성 제한(중요): Minimax 동시 task 제한 고려
+async function runWithConcurrency(items, worker, concurrency=3) {
+  const queue = items.slice();
+  const workers = Array.from({length: concurrency}, async () => {
+    while (queue.length) {
+      const item = queue.shift();
+      await worker(item);
+    }
+  });
+  await Promise.all(workers);
+}
+
+async function startVideoGenerationReal() {
   videoGenerationInProgress = true;
 
   generateVideosBtn.disabled = true;
@@ -613,44 +656,80 @@ function startVideoGenerationSimulation() {
   videoProgressBar.classList.remove("done");
   videoProgressBar.style.width = "0%";
   videoProgressPercent.textContent = "0%";
+  videoStatusText.textContent = "영상 생성 작업 생성 중…";
 
-  let current = 0;
+  // 1) 각 세그먼트에 video job 생성 (동시 3개)
+  await runWithConcurrency(
+    segments,
+    async (seg) => {
+      seg.videoStatus = "processing";
+      seg.videoUrl = null;
+      renderSceneList();
+
+      const created = await createVideoJob(seg.promptEn);
+      seg._videoJobId = created.job_id;
+      seg._minimaxTaskId = created.minimax_task_id;
+      renderSceneList();
+    },
+    3
+  );
+
+  // 2) 폴링: DONE/ERROR 될 때까지 반복
   const total = segments.length;
 
-  function step() {
-    if (current >= total) {
-      videoGenerationInProgress = false;
-      videoProgressBar.style.width = "100%";
-      videoProgressPercent.textContent = "100%";
-      videoProgressBar.classList.add("done");
-      videoStatusText.textContent = "영상 생성 완료!";
-      downloadAllBtn.disabled = false;
-      generateVideosBtn.disabled = false;
-      generatePromptsBtn.disabled = false;
-      return;
+  while (true) {
+    let finished = 0;
+
+    for (const seg of segments) {
+      if (!seg._videoJobId) continue;
+
+      if (seg.videoStatus === "ready" || seg.videoStatus === "error") {
+        finished++;
+        continue;
+      }
+
+      const st = await getVideoJob(seg._videoJobId);
+
+      // 메타 갱신
+      seg.duration = st.duration ?? seg.duration ?? "-";
+      seg.resolution = st.resolution ?? seg.resolution ?? "-";
+      seg.model = st.model ?? seg.model ?? "-";
+      seg.originalPrompt = st.prompt ?? seg.originalPrompt ?? seg.promptEn;
+
+      if (st.status === "DONE") {
+        seg.videoStatus = "ready";
+        seg.videoUrl = st.download_url || null; // ✅ 진짜 URL
+      } else if (st.status === "ERROR") {
+        seg.videoStatus = "error";
+        seg.videoUrl = null;
+      } else {
+        seg.videoStatus = "processing";
+      }
     }
 
-    const seg = segments[current];
-    seg.videoStatus = "ready";
-    seg.videoUrl = `https://example.com/video_${current + 1}.mp4`;
-
-    seg.duration = 10 + ((seg.id * 3) % 7);
-    seg.resolution = "1080p";
-    seg.model = seg.model || "t2v-beta";
-    seg.originalPrompt = seg.originalPrompt || seg.promptEn;
-
-    current++;
-    videoProgressBar.style.width = `${(current / total) * 100}%`;
-    videoProgressPercent.textContent = `${Math.floor((current / total) * 100)}%`;
-    videoStatusText.textContent = `영상 생성 중… (${current}/${total})`;
-
     renderSceneList();
-    setTimeout(step, 400);
+
+    const pct = Math.floor((finished / total) * 100);
+    videoProgressBar.style.width = `${pct}%`;
+    videoProgressPercent.textContent = `${pct}%`;
+    videoStatusText.textContent = `영상 생성 중… (${finished}/${total})`;
+
+    if (finished >= total) break;
+    await sleep(1500);
   }
 
-  step();
+  videoGenerationInProgress = false;
+  videoProgressBar.classList.add("done");
+  videoStatusText.textContent = "영상 생성 완료!";
+  downloadAllBtn.disabled = false;
+  generateVideosBtn.disabled = false;
+  generatePromptsBtn.disabled = false;
 }
 
+  
+
+
+  
 /* -----------------------------
    Scene 리스트 렌더링
 ------------------------------ */
