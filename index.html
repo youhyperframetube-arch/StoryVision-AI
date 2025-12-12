@@ -108,7 +108,6 @@
     .btn span.icon { font-size: 15px; }
 
     .btn:hover:not(:disabled) { background: #3c47c0; }
-
     .btn:active:not(:disabled) { transform: translateY(1px); }
 
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -121,13 +120,7 @@
 
     .btn-grey { background: #272b3c; border-color: #3e4256; }
 
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-top: 12px;
-    }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
 
     .progress-wrapper { margin-top: 16px; }
 
@@ -162,12 +155,7 @@
 
     .progress-bar-inner.done { background: linear-gradient(90deg, #2e9f5d, #5be48f); }
 
-    .progress-percentage {
-      font-size: 11px;
-      color: #d1d7ff;
-      margin-top: 4px;
-      text-align: right;
-    }
+    .progress-percentage { font-size: 11px; color: #d1d7ff; margin-top: 4px; text-align: right; }
 
     .hidden { display: none; }
 
@@ -265,8 +253,6 @@
 
     .pill.ready { border-color: #2c8f57; background: #14291f; color: #bfeecf; }
     .pill.pending { border-color: #91502e; background: #26150f; color: #ffd7b3; }
-    .pill.processing { border-color: #3a6fb4; background: #0f1c2a; color: #c8e3ff; }
-    .pill.error { border-color: #c84a4a; background: #2a0f14; color: #ffd0d0; }
 
     footer {
       padding: 12px 20px 20px;
@@ -285,8 +271,7 @@
       border-radius: 8px;
       overflow: hidden;
     }
-    .meta-table th,
-    .meta-table td {
+    .meta-table th, .meta-table td {
       padding: 6px 8px;
       border-bottom: 1px solid #1f2542;
       font-size: 11px;
@@ -305,21 +290,19 @@
       word-break: break-word;
       white-space: pre-wrap;
     }
-    .meta-table tr:last-child th,
-    .meta-table tr:last-child td { border-bottom: none; }
+    .meta-table tr:last-child th, .meta-table tr:last-child td { border-bottom: none; }
   </style>
 </head>
 
 <body>
 <header>
   <div class="title">
-    <h1>StoryVision AI v0.81</h1>
+    <h1>StoryVision AI v0.8</h1>
     <div class="subtitle">문장 기반 영상 자동화 생성 프로그램</div>
   </div>
 </header>
 
 <main>
-  <!-- 스트랩 1 -->
   <section class="stripe-1">
     <div class="section-inner">
       <div class="section-header">
@@ -356,7 +339,6 @@
     </div>
   </section>
 
-  <!-- 스트랩 2 -->
   <section class="stripe-2">
     <div class="section-inner">
       <div class="section-header">
@@ -443,46 +425,102 @@ function checkPassword() {
   return true;
 }
 
+/* 유틸 */
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+async function fetchJson(url, options) {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  let json;
+  try { json = text ? JSON.parse(text) : {}; }
+  catch { json = { raw: text }; }
+
+  if (!res.ok) {
+    const msg = json?.detail || json?.error || res.statusText || "Request failed";
+    throw new Error(msg);
+  }
+  return json;
+}
+
 /* -----------------------------
-   1) 프롬프트 생성 요청
+   NEW: 백엔드(job_id + polling) 기반 프롬프트 생성
+   - POST /prompt-jobs { sentence }
+   - GET  /prompt-jobs/{job_id} => DONE이면 video_prompt
 ------------------------------ */
-generatePromptsBtn.addEventListener("click", () => {
-  if (promptGenerationInProgress || videoGenerationInProgress) return alert("작업 진행 중입니다.");
-  if (!checkPassword()) return;
+async function createPromptJob(sentence) {
+  return await fetchJson(`${API_BASE}/prompt-jobs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sentence })
+  });
+}
 
-  const lines = inputTextEl.value.split("\n").map(s => s.trim()).filter(s => s);
-  if (lines.length === 0) return alert("문장을 입력하세요.");
+async function pollPromptJob(jobId, { intervalMs = 1200, timeoutMs = 60000 } = {}) {
+  const start = Date.now();
+  while (true) {
+    const job = await fetchJson(`${API_BASE}/prompt-jobs/${jobId}`, { method: "GET" });
+    if (job.status === "DONE") return job;
+    if (job.status === "ERROR") throw new Error(job.error || "OpenAI job failed");
+    if (Date.now() - start > timeoutMs) throw new Error("프롬프트 생성 타임아웃");
+    await sleep(intervalMs);
+  }
+}
 
-  segments = lines.map((line, idx) => ({
-    id: idx + 1,
-    lineKo: line,
-    promptEn: "",
+/* 동시 실행 제한(서버/비용 안정) */
+async function mapWithConcurrency(items, concurrency, worker) {
+  const results = new Array(items.length);
+  let idx = 0;
 
-    // video 상태
-    videoStatus: "pending", // pending|processing|ready|error
-    videoUrl: null,
+  async function runOne() {
+    while (idx < items.length) {
+      const cur = idx++;
+      results[cur] = await worker(items[cur], cur);
+    }
+  }
 
-    // video job id
-    _videoJobId: null,
+  const runners = [];
+  for (let i = 0; i < Math.min(concurrency, items.length); i++) runners.push(runOne());
+  await Promise.all(runners);
+  return results;
+}
 
-    // 메타 표시
-    duration: null,
-    resolution: null,
-    model: null,
-    originalPrompt: null,
+/* -----------------------------
+   1) 프롬프트 생성 버튼
+------------------------------ */
+generatePromptsBtn.addEventListener("click", async () => {
+  try {
+    if (promptGenerationInProgress || videoGenerationInProgress) return alert("작업 진행 중입니다.");
+    if (!checkPassword()) return;
 
-    // 오류 메시지
-    error: null
-  }));
+    const lines = inputTextEl.value.split("\n").map(s => s.trim()).filter(s => s);
+    if (lines.length === 0) return alert("문장을 입력하세요.");
 
-  renderSceneList();
-  requestPromptGeneration(lines);
+    segments = lines.map((line, idx) => ({
+      id: idx + 1,
+      lineKo: line,
+      promptEn: "",
+      jobId: null,
+      promptStatus: "pending", // pending | ready | error
+      promptError: null,
+
+      videoStatus: "pending",
+      videoUrl: null,
+
+      duration: null,
+      resolution: null,
+      model: null,
+      originalPrompt: null
+    }));
+
+    renderSceneList();
+    await requestPromptGeneration(lines);
+  } catch (err) {
+    alert("서버 오류: " + err.message);
+  }
 });
 
-/* 서버로 프롬프트 생성 요청
-   - 너 백엔드가 /generate-prompts 로 {lines:[...]} -> {items:[{id, prompt_en}]} 형태였던 걸 그대로 사용
-*/
-function requestPromptGeneration(lines) {
+/* 서버로 프롬프트 생성 요청 */
+async function requestPromptGeneration(lines) {
   promptGenerationInProgress = true;
   generatePromptsBtn.disabled = true;
   generateVideosBtn.disabled = true;
@@ -491,100 +529,80 @@ function requestPromptGeneration(lines) {
   promptProgressBar.classList.remove("done");
   promptProgressBar.style.width = "0%";
   promptProgressPercent.textContent = "0%";
-  promptStatusText.textContent = "서버 요청 중…";
+  promptStatusText.textContent = "job 생성 중…";
 
-  fetch(`${API_BASE}/generate-prompts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ lines })
-  })
-  .then(res => res.json())
-  .then(json => {
-    const items = Array.isArray(json.items) ? json.items : [];
-    items.forEach(item => {
-      const seg = segments.find(s => s.id === item.id);
-      if (seg) seg.promptEn = item.prompt_en || "";
-    });
+  const total = lines.length;
+  let doneCount = 0;
 
-    promptProgressBar.style.width = "100%";
-    promptProgressPercent.textContent = "100%";
-    promptProgressBar.classList.add("done");
-    promptStatusText.textContent = "프롬프트 생성 완료!";
+  const updateProgress = () => {
+    const pct = Math.floor((doneCount / total) * 100);
+    promptProgressBar.style.width = `${pct}%`;
+    promptProgressPercent.textContent = `${pct}%`;
+    promptStatusText.textContent = `프롬프트 생성 중… (${doneCount}/${total})`;
+  };
 
-    promptGenerationInProgress = false;
-    generatePromptsBtn.disabled = false;
-    generateVideosBtn.disabled = false;
+  updateProgress();
 
-    renderSceneList();
-  })
-  .catch(err => {
-    alert("서버 오류: " + err.message);
-    promptGenerationInProgress = false;
-    generatePromptsBtn.disabled = false;
-    generateVideosBtn.disabled = false;
+  // 동시에 너무 많이 때리지 않도록 3개씩 처리
+  const CONCURRENCY = 3;
+
+  await mapWithConcurrency(lines, CONCURRENCY, async (line, index) => {
+    const seg = segments[index];
+    try {
+      // 1) job 생성
+      const created = await createPromptJob(line);
+      seg.jobId = created.job_id;
+
+      // 2) 폴링으로 결과 받기
+      const job = await pollPromptJob(seg.jobId);
+
+      // 3) 결과 반영
+      seg.promptEn = job.video_prompt || "";
+      seg.originalPrompt = seg.promptEn;
+      seg.model = "openai:" + (job.model || "gpt"); // 표시용(백엔드가 model을 안 주면 gpt로)
+      seg.promptStatus = "ready";
+      seg.promptError = null;
+
+    } catch (e) {
+      seg.promptStatus = "error";
+      seg.promptError = e.message || "unknown error";
+      seg.promptEn = "(생성 실패)";
+    } finally {
+      doneCount++;
+      updateProgress();
+      renderSceneList();
+    }
   });
+
+  promptProgressBar.style.width = "100%";
+  promptProgressPercent.textContent = "100%";
+  promptProgressBar.classList.add("done");
+
+  const hasError = segments.some(s => s.promptStatus === "error");
+  promptStatusText.textContent = hasError ? "일부 실패(에러 표시 확인)" : "프롬프트 생성 완료!";
+
+  promptGenerationInProgress = false;
+  generatePromptsBtn.disabled = false;
+  generateVideosBtn.disabled = false;
+
+  renderSceneList();
 }
 
 /* -----------------------------
-   2) 영상 생성 (실제 서버 /video-jobs 사용)
+   2) 영상 생성 (시뮬레이션 그대로 유지)
 ------------------------------ */
-generateVideosBtn.addEventListener("click", async () => {
-  if (promptGenerationInProgress || videoGenerationInProgress) return alert("작업 진행 중입니다.");
+generateVideosBtn.addEventListener("click", () => {
   if (!checkPassword()) return;
 
   if (segments.length === 0) return alert("먼저 프롬프트를 생성하세요.");
-  if (segments.some(s => !s.promptEn)) return alert("아직 프롬프트가 생성되지 않은 문장이 있습니다.");
-
-  try {
-    await startVideoGenerationReal();
-  } catch (e) {
-    alert("영상 생성 오류: " + e.message);
-    videoGenerationInProgress = false;
-    generateVideosBtn.disabled = false;
-    generatePromptsBtn.disabled = false;
+  if (segments.some(s => !s.promptEn || s.promptStatus !== "ready")) {
+    return alert("아직 프롬프트가 생성되지 않았거나 실패한 문장이 있습니다.");
   }
+
+  startVideoGenerationSimulation();
 });
 
-async function createVideoJob(promptEn) {
-  const res = await fetch(`${API_BASE}/video-jobs`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      prompt: promptEn,
-      model: "MiniMax-Hailuo-2.3",
-      duration: 6,
-      resolution: "768P",
-      prompt_optimizer: true,
-      fast_pretreatment: false
-    })
-  });
-
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.detail || `createVideoJob failed: ${res.status}`);
-  return json; // { job_id, status, minimax_task_id }
-}
-
-async function getVideoJob(jobId) {
-  const res = await fetch(`${API_BASE}/video-jobs/${jobId}`);
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.detail || `getVideoJob failed: ${res.status}`);
-  return json;
-}
-
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-async function runWithConcurrency(items, worker, concurrency=3) {
-  const queue = items.slice();
-  const workers = Array.from({length: concurrency}, async () => {
-    while (queue.length) {
-      const item = queue.shift();
-      await worker(item);
-    }
-  });
-  await Promise.all(workers);
-}
-
-async function startVideoGenerationReal() {
+function startVideoGenerationSimulation() {
   videoGenerationInProgress = true;
 
   generateVideosBtn.disabled = true;
@@ -595,80 +613,42 @@ async function startVideoGenerationReal() {
   videoProgressBar.classList.remove("done");
   videoProgressBar.style.width = "0%";
   videoProgressPercent.textContent = "0%";
-  videoStatusText.textContent = "영상 생성 작업 생성 중…";
 
-  // 1) 각 세그먼트에 video job 생성 (동시 3개)
-  await runWithConcurrency(
-    segments,
-    async (seg) => {
-      seg.videoStatus = "processing";
-      seg.videoUrl = null;
-      seg.error = null;
-      renderSceneList();
-
-      const created = await createVideoJob(seg.promptEn);
-      seg._videoJobId = created.job_id;
-      renderSceneList();
-    },
-    3
-  );
-
-  // 2) 폴링: DONE/ERROR 될 때까지 반복
+  let current = 0;
   const total = segments.length;
 
-  while (true) {
-    let finished = 0;
-
-    for (const seg of segments) {
-      if (!seg._videoJobId) continue;
-
-      if (seg.videoStatus === "ready" || seg.videoStatus === "error") {
-        finished++;
-        continue;
-      }
-
-      const st = await getVideoJob(seg._videoJobId);
-
-      // 메타 갱신
-      seg.duration = st.duration ?? seg.duration ?? "-";
-      seg.resolution = st.resolution ?? seg.resolution ?? "-";
-      seg.model = st.model ?? seg.model ?? "-";
-      seg.originalPrompt = st.prompt ?? seg.originalPrompt ?? seg.promptEn;
-
-      if (st.status === "DONE") {
-        seg.videoStatus = "ready";
-        seg.videoUrl = st.download_url || null;   // ✅ 진짜 URL
-        if (!seg.videoUrl) {
-          // DONE인데 url이 없는 케이스(파일 retrieve 실패 등)
-          seg.videoStatus = "error";
-          seg.error = "DONE but download_url is missing";
-        }
-      } else if (st.status === "ERROR") {
-        seg.videoStatus = "error";
-        seg.videoUrl = null;
-        seg.error = st.error || "Unknown error";
-      } else {
-        seg.videoStatus = "processing";
-      }
+  function step() {
+    if (current >= total) {
+      videoGenerationInProgress = false;
+      videoProgressBar.style.width = "100%";
+      videoProgressPercent.textContent = "100%";
+      videoProgressBar.classList.add("done");
+      videoStatusText.textContent = "영상 생성 완료!";
+      downloadAllBtn.disabled = false;
+      generateVideosBtn.disabled = false;
+      generatePromptsBtn.disabled = false;
+      return;
     }
 
+    const seg = segments[current];
+    seg.videoStatus = "ready";
+    seg.videoUrl = `https://example.com/video_${current + 1}.mp4`;
+
+    seg.duration = 10 + ((seg.id * 3) % 7);
+    seg.resolution = "1080p";
+    seg.model = seg.model || "t2v-beta";
+    seg.originalPrompt = seg.originalPrompt || seg.promptEn;
+
+    current++;
+    videoProgressBar.style.width = `${(current / total) * 100}%`;
+    videoProgressPercent.textContent = `${Math.floor((current / total) * 100)}%`;
+    videoStatusText.textContent = `영상 생성 중… (${current}/${total})`;
+
     renderSceneList();
-
-    const pct = Math.floor((finished / total) * 100);
-    videoProgressBar.style.width = `${pct}%`;
-    videoProgressPercent.textContent = `${pct}%`;
-    videoStatusText.textContent = `영상 생성 중… (${finished}/${total})`;
-
-    if (finished >= total) break;
-    await sleep(1500);
+    setTimeout(step, 400);
   }
 
-  videoGenerationInProgress = false;
-  videoProgressBar.classList.add("done");
-  videoStatusText.textContent = "영상 생성 완료!";
-  downloadAllBtn.disabled = false;
-  generateVideosBtn.disabled = false;
-  generatePromptsBtn.disabled = false;
+  step();
 }
 
 /* -----------------------------
@@ -698,13 +678,11 @@ function renderSceneList() {
     textBlock.innerHTML = `
       문장 ${seg.id}
       <small>${seg.lineKo}</small>
+      ${seg.promptStatus === "error" ? `<small style="color:#ff9aa7;">프롬프트 실패: ${seg.promptError}</small>` : ""}
     `;
 
     const promptBlock = document.createElement("div");
     promptBlock.className = "scene-prompt";
-
-    const errLine = seg.error ? `<div style="margin-top:6px;color:#ffb3b3;font-size:11px;">⚠ ${seg.error}</div>` : "";
-
     promptBlock.innerHTML = `
       <div class="scene-prompt-label">영문 프롬프트</div>
       <div class="scene-prompt-content">
@@ -729,34 +707,22 @@ function renderSceneList() {
           <td>${seg.originalPrompt ?? "-"}</td>
         </tr>
       </table>
-      ${errLine}
     `;
 
     const actions = document.createElement("div");
     actions.className = "scene-actions";
 
     const pill = document.createElement("span");
-    if (seg.videoStatus === "ready") {
-      pill.className = "pill ready";
-      pill.textContent = "생성 완료";
-    } else if (seg.videoStatus === "processing") {
-      pill.className = "pill processing";
-      pill.textContent = "생성 중";
-    } else if (seg.videoStatus === "error") {
-      pill.className = "pill error";
-      pill.textContent = "실패";
-    } else {
-      pill.className = "pill pending";
-      pill.textContent = "대기 중";
-    }
+    pill.className = "pill " + (seg.videoStatus === "ready" ? "ready" : "pending");
+    pill.textContent = seg.videoStatus === "ready" ? "생성 완료" : "대기 중";
 
     const dlBtn = document.createElement("button");
     dlBtn.className = "btn " + (seg.videoStatus === "ready" ? "btn-green" : "btn-grey");
     dlBtn.style.padding = "4px 10px";
     dlBtn.textContent = "다운로드";
-    dlBtn.disabled = !(seg.videoStatus === "ready" && seg.videoUrl);
+    dlBtn.disabled = seg.videoStatus !== "ready";
 
-    if (seg.videoStatus === "ready" && seg.videoUrl) {
+    if (seg.videoStatus === "ready") {
       dlBtn.onclick = () => window.open(seg.videoUrl, "_blank");
     }
 
@@ -772,9 +738,7 @@ function renderSceneList() {
   });
 }
 
-/* -----------------------------
-   초기 렌더
------------------------------- */
+/* 초기 렌더 */
 renderSceneList();
 </script>
 
