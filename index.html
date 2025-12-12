@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>StoryVision AI</title>
+  <title>StoryVision AI - 미스터리 영상 자동 프롬프트 & 생성 관리</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; }
@@ -14,33 +14,19 @@
       color: #f5f5ff;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
     header {
       padding: 16px 20px;
       background: linear-gradient(90deg, #0c1024, #151b3a);
       border-bottom: 1px solid #232a4c;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    header .title {
-      display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 6px;
     }
 
     header h1 {
-      font-size: 20px;
       margin: 0;
+      font-size: 20px;
       font-weight: 700;
-      letter-spacing: 0.04em;
     }
 
     header .subtitle {
@@ -73,13 +59,6 @@
       margin: 0 auto;
     }
 
-    .section-header {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 16px;
-    }
-
     .section-title {
       font-size: 18px;
       display: flex;
@@ -87,7 +66,7 @@
       gap: 8px;
     }
 
-    .section-title span.badge {
+    .badge {
       font-size: 11px;
       padding: 2px 7px;
       border-radius: 999px;
@@ -96,399 +75,135 @@
       color: #c7d1ff;
     }
 
-    .section-desc {
-      font-size: 13px;
-      color: #a8add6;
-    }
-
     textarea {
       width: 100%;
       min-height: 220px;
-      resize: vertical;
-      padding: 10px 12px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #313a69;
       background: #070a18;
-      color: #f5f5ff;
-      font-family: inherit;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    textarea::placeholder {
-      color: #696f9c;
-    }
-
-    .label {
-      font-size: 13px;
-      color: #c4c7ec;
-      margin-bottom: 6px;
-    }
-
-    .helper {
-      font-size: 11px;
-      color: #868bbb;
-      margin-top: 4px;
+      color: #fff;
     }
 
     .btn {
-      font-family: inherit;
-      font-size: 14px;
       padding: 8px 14px;
       border-radius: 999px;
-      border: 1px solid #3943a6;
       background: #2a3389;
-      color: #f5f5ff;
+      border: 1px solid #3943a6;
+      color: #fff;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.15s, transform 0.05s, opacity 0.15s;
-      white-space: nowrap;
     }
-
-    .btn span.icon {
-      font-size: 15px;
-    }
-
-    .btn:hover:not(:disabled) {
-      background: #3c47c0;
-    }
-
-    .btn:active:not(:disabled) {
-      transform: translateY(1px);
-    }
-
-    .btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .btn-secondary {
-      background: #161a34;
-      border-color: #3a405f;
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: #202640;
-    }
-
-    .btn-green {
-      background: #1f6f46;
-      border-color: #28a567;
-    }
-
-    .btn-green:hover:not(:disabled) {
-      background: #2a9a63;
-    }
-
-    .btn-grey {
-      background: #272b3c;
-      border-color: #3e4256;
-    }
-
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-top: 12px;
-    }
-
-    .progress-wrapper {
-      margin-top: 16px;
-    }
-
-    .progress-label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: #9aa1d4;
-      margin-bottom: 4px;
-    }
-
-    .progress-bar-outer {
-      position: relative;
-      width: 100%;
-      height: 14px;
-      border-radius: 999px;
-      background: #15182b;
-      overflow: hidden;
-      border: 1px solid #272d4f;
-    }
-
-    .progress-bar-inner {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #b32b39, #f55c4a);
-      transition: width 0.1s linear, background 0.2s;
-    }
-
-    .progress-bar-inner.done {
-      background: linear-gradient(90deg, #2e9f5d, #5be48f);
-    }
-
-    .progress-percentage {
-      font-size: 11px;
-      color: #d1d7ff;
-      margin-top: 4px;
-      text-align: right;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .card {
-      border-radius: 10px;
-      border: 1px solid #252c4c;
-      background: rgba(7, 10, 25, 0.9);
-      padding: 14px 16px;
-      margin-top: 8px;
-    }
+    .btn-secondary { background: #161a34; border-color:#3a405f; }
+    .btn-green { background:#1f6f46; border-color:#28a567; }
+    .btn-orange { background:#7a3f13; border-color:#b8641b; }
 
     .scene-list {
       margin-top: 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 420px;
-      overflow-y: auto;
-      padding-right: 4px;
     }
 
     .scene-item {
       display: grid;
-      grid-template-columns: 72px minmax(0, 1.6fr) minmax(0, 1.3fr) auto;
+      grid-template-columns: 72px minmax(0,1.6fr) minmax(0,1.3fr) auto;
       gap: 10px;
-      padding: 8px;
+      padding: 10px;
       border-radius: 8px;
-      background: #090d22;
       border: 1px solid #252c4c;
-      align-items: center;
-    }
-
-    @media (max-width: 900px) {
-      .scene-item {
-        grid-template-columns: 72px minmax(0, 1fr);
-        grid-template-rows: auto auto auto;
-      }
-      .scene-item > .scene-prompt {
-        grid-column: 1 / span 2;
-      }
-      .scene-item > .scene-actions {
-        grid-column: 1 / span 2;
-      }
+      background: #090d22;
+      align-items: flex-start;
     }
 
     .thumb {
       width: 72px;
       height: 48px;
       border-radius: 6px;
-      background: radial-gradient(circle at 20% 20%, #ffffff33 0, #38408a 25%, #14162f 55%);
+      background: #14162f;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      color: #dde2ff;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .thumb::after {
-      content: "";
-      position: absolute;
-      width: 85%;
-      height: 2px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #ffffff55, transparent);
-      transform: rotate(-28deg);
-      top: 10%;
-      left: -30%;
-    }
-
-    .scene-text {
-      font-size: 13px;
-      color: #e3e6ff;
-    }
-
-    .scene-text small {
-      display: block;
-      font-size: 11px;
-      color: #8e94c1;
-      margin-top: 3px;
-    }
-
-    .scene-prompt {
-      font-size: 12px;
-      color: #b8bff3;
-    }
-
-    .scene-prompt-label {
-      font-size: 11px;
-      color: #8e94c1;
-      margin-bottom: 2px;
-    }
-
-    .scene-prompt-content {
-      font-size: 12px;
-      color: #d4d8ff;
-    }
-
-    .scene-actions {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-      font-size: 11px;
-      color: #9aa1d4;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
     }
 
     .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid #38406b;
-      background: #10152d;
-      font-size: 11px;
-      color: #c0c6ff;
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
     }
+    .pill.ready { border:1px solid #2c8f57; background:#14291f; color:#bfeecf; }
+    .pill.pending { border:1px solid #91502e; background:#26150f; color:#ffd7b3; }
 
-    .pill.ready {
-      border-color: #2c8f57;
-      background: #14291f;
-      color: #bfeecf;
-    }
-
-    .pill.pending {
-      border-color: #91502e;
-      background: #26150f;
-      color: #ffd7b3;
-    }
-
-    footer {
-      padding: 12px 20px 20px;
-      border-top: 1px solid #101632;
-      font-size: 11px;
-      color: #7f85b4;
-      text-align: center;
-    }
+    footer { padding:20px; text-align:center; font-size:11px; color:#7f85b4; }
   </style>
 </head>
 
 <body>
 <header>
-  <div class="title">
-    <h1>StoryVision AI</h1>
-    <div class="subtitle">기묘한 밤 스타일 미스터리 영상화를 위한 텍스트 → 프롬프트 → 영상 생성 도우미 (MVP)</div>
-  </div>
+  <h1>StoryVision AI</h1>
+  <div class="subtitle">기묘한 밤 스타일 미스터리 영상화를 위한 텍스트 → 프롬프트 → 영상 생성 도우미</div>
 </header>
 
 <main>
-  <!-- 스트랩 1 -->
-  <section class="stripe-1">
-    <div class="section-inner">
-      <div class="section-header">
-        <div class="section-title">
-          <span>스트랩 1 · 프롬프트 생성</span><span class="badge">STEP 1</span>
-        </div>
-        <div class="section-desc">
-          줄 단위로 입력된 텍스트를 기반으로 한 줄당 1개의 영상 프롬프트를 생성합니다.
-        </div>
-      </div>
 
-      <div class="card">
-        <div class="label">전체 스크립트를 입력하세요.</div>
-        <textarea id="inputText" placeholder="첫 줄 = 첫 장면"></textarea>
-
-        <div class="row">
-          <button id="generatePromptsBtn" class="btn">
-            <span class="icon">✨</span>프롬프트 생성하기
-          </button>
-          <span class="helper">※ 비밀번호 9981 필요</span>
-        </div>
-
-        <div id="promptProgressWrapper" class="progress-wrapper hidden">
-          <div class="progress-label-row">
-            <span>프롬프트 생성 진행도</span>
-            <span id="promptStatusText">대기 중…</span>
-          </div>
-          <div class="progress-bar-outer">
-            <div id="promptProgressBar" class="progress-bar-inner"></div>
-          </div>
-          <div id="promptProgressPercent" class="progress-percentage">0%</div>
-        </div>
-      </div>
+<!-- 스트랩 1 -->
+<section class="stripe-1">
+  <div class="section-inner">
+    <div class="section-title">
+      스트랩 1 · 프롬프트 생성 <span class="badge">STEP 1</span>
     </div>
-  </section>
 
-  <!-- 스트랩 2 -->
-  <section class="stripe-2">
-    <div class="section-inner">
-      <div class="section-header">
-        <div class="section-title">
-          <span>스트랩 2 · 영상 생성 관리</span>
-          <span class="badge">STEP 2</span>
-        </div>
-        <div class="section-desc">
-          생성된 문장 + 프롬프트 기반으로 영상 생성 상태를 관리합니다.
-        </div>
+    <textarea id="inputText"></textarea>
+
+    <button id="generatePromptsBtn" class="btn">✨ 프롬프트 생성하기</button>
+
+    <div id="promptProgressWrapper" class="hidden">
+      <div id="promptStatusText"></div>
+      <div class="progress-bar-outer">
+        <div id="promptProgressBar" class="progress-bar-inner"></div>
       </div>
-
-      <div class="card">
-        <div class="row" style="justify-content: space-between;">
-          <div class="helper">먼저 프롬프트를 생성하세요.</div>
-
-          <button id="generateVideosBtn" class="btn btn-secondary">
-            <span class="icon">🎬</span>영상 생성하기
-          </button>
-        </div>
-
-        <div id="videoProgressWrapper" class="progress-wrapper hidden">
-          <div class="progress-label-row">
-            <span>영상 생성</span>
-            <span id="videoStatusText">대기 중…</span>
-          </div>
-          <div class="progress-bar-outer">
-            <div id="videoProgressBar" class="progress-bar-inner"></div>
-          </div>
-          <div id="videoProgressPercent" class="progress-percentage">0%</div>
-        </div>
-
-        <div class="row" style="justify-content: flex-end; margin-top:16px;">
-          <button id="downloadAllBtn" class="btn btn-grey" disabled>
-            <span class="icon">📦</span>일괄 다운로드
-          </button>
-        </div>
-
-        <div id="sceneList" class="scene-list"></div>
-      </div>
+      <div id="promptProgressPercent">0%</div>
     </div>
-  </section>
+  </div>
+</section>
+
+<!-- 스트랩 2 -->
+<section class="stripe-2">
+  <div class="section-inner">
+    <div class="section-title">
+      스트랩 2 · 영상 생성 관리 <span class="badge">STEP 2</span>
+    </div>
+
+    <button id="generateVideosBtn" class="btn btn-secondary">🎬 영상 생성하기</button>
+
+    <div id="videoProgressWrapper" class="hidden">
+      <div id="videoStatusText"></div>
+      <div class="progress-bar-outer">
+        <div id="videoProgressBar" class="progress-bar-inner"></div>
+      </div>
+      <div id="videoProgressPercent">0%</div>
+    </div>
+
+    <div id="sceneList" class="scene-list"></div>
+
+    <button id="downloadAllBtn" class="btn btn-grey" disabled>📦 일괄 다운로드</button>
+  </div>
+</section>
+
 </main>
 
 <footer>StoryVision AI · MVP</footer>
 
 <script>
-/* -----------------------------
-   기본 설정 / 상태 변수
------------------------------- */
-const API_BASE = "https://storyvision-backend.onrender.com";
-
-let segments = []; 
+let segments = [];
 let promptGenerationInProgress = false;
 let videoGenerationInProgress = false;
 const PASSWORD = "9981";
 
-const $ = id => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
-/* DOM 요소 */
+/* UI Elements */
 const inputTextEl = $("inputText");
 const generatePromptsBtn = $("generatePromptsBtn");
 const promptProgressWrapper = $("promptProgressWrapper");
@@ -501,149 +216,162 @@ const videoProgressWrapper = $("videoProgressWrapper");
 const videoProgressBar = $("videoProgressBar");
 const videoProgressPercent = $("videoProgressPercent");
 const videoStatusText = $("videoStatusText");
-const downloadAllBtn = $("downloadAllBtn");
-const sceneListEl = $("sceneList");
 
-/* 비밀번호 확인 */
+const sceneListEl = $("sceneList");
+const downloadAllBtn = $("downloadAllBtn");
+
 function checkPassword() {
-  const answer = prompt("관리자 비밀번호 (9981)를 입력하세요.");
-  if (answer === null) return false;
-  if (answer.trim() !== PASSWORD) {
-    alert("비밀번호가 올바르지 않습니다.");
-    return false;
-  }
-  return true;
+  return prompt("관리자 비밀번호를 입력하세요 (9981)") === PASSWORD;
 }
 
-/* -----------------------------
-   1) 프롬프트 생성 요청
------------------------------- */
+/* ------------------------------
+   STEP 1 — 프롬프트 생성
+------------------------------*/
 generatePromptsBtn.addEventListener("click", () => {
-  if (promptGenerationInProgress || videoGenerationInProgress) return alert("작업 진행 중입니다.");
   if (!checkPassword()) return;
 
-  const lines = inputTextEl.value.split("\n").map(s => s.trim()).filter(s => s);
-  if (lines.length === 0) return alert("문장을 입력하세요.");
+  const lines = inputTextEl.value.trim().split("\n").map(v=>v.trim()).filter(v=>v);
 
   segments = lines.map((line, idx) => ({
-    id: idx + 1,
+    id: idx+1,
     lineKo: line,
     promptEn: "",
     videoStatus: "pending",
-    videoUrl: null
+
+    // minimax info
+    videoUrl: null,
+    thumbnailUrl: null,
+    duration: null,
+    resolution: null,
+    model: null,
+    version: null,
   }));
 
   renderSceneList();
-  requestPromptGeneration(lines);
+  simulatePromptGeneration(lines);
 });
 
-/* 서버로 프롬프트 생성 요청 */
-function requestPromptGeneration(lines) {
+function simulatePromptGeneration(lines) {
   promptGenerationInProgress = true;
   generatePromptsBtn.disabled = true;
-  generateVideosBtn.disabled = true;
 
   promptProgressWrapper.classList.remove("hidden");
-  promptProgressBar.style.width = "0%";
-  promptProgressPercent.textContent = "0%";
-  promptStatusText.textContent = "서버 요청 중…";
+  let current = 0;
+  const total = lines.length;
 
-  fetch(`${API_BASE}/generate-prompts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ lines })
-  })
-  .then(res => res.json())
-  .then(json => {
-    json.items.forEach(item => {
-      const seg = segments.find(s => s.id === item.id);
-      if (seg) seg.promptEn = item.prompt_en;
-    });
+  function step() {
+    if (current >= total) {
+      promptGenerationInProgress = false;
+      generatePromptsBtn.disabled = false;
+      promptProgressBar.style.width = "100%";
+      promptProgressPercent.textContent = "100%";
+      promptStatusText.textContent = "프롬프트 생성 완료!";
+      return;
+    }
 
-    promptProgressBar.style.width = "100%";
-    promptProgressPercent.textContent = "100%";
-    promptProgressBar.classList.add("done");
-    promptStatusText.textContent = "프롬프트 생성 완료!";
+    segments[current].promptEn =
+      `Documentary-style cinematic shot for: "${lines[current].slice(0,40)}..." in a dark, mysterious atmosphere`;
 
-    promptGenerationInProgress = false;
-    generatePromptsBtn.disabled = false;
-    generateVideosBtn.disabled = false;
+    current++;
+    let pct = Math.round((current/total)*100);
+    promptProgressBar.style.width = pct+"%";
+    promptProgressPercent.textContent = pct+"%";
+    promptStatusText.textContent = `프롬프트 생성 중 (${current}/${total})`;
 
     renderSceneList();
-  })
-  .catch(err => {
-    alert("서버 오류: " + err.message);
-    promptGenerationInProgress = false;
-  });
+    setTimeout(step, 150);
+  }
+  step();
 }
 
-/* -----------------------------
-   2) 영상 생성 (시뮬레이션)
------------------------------- */
+/* ------------------------------
+   STEP 2 — 전체 영상 생성
+------------------------------*/
 generateVideosBtn.addEventListener("click", () => {
   if (!checkPassword()) return;
-
-  if (segments.length === 0) return alert("먼저 프롬프트를 생성하세요.");
-  if (segments.some(s => !s.promptEn)) return alert("아직 프롬프트가 생성되지 않은 문장이 있습니다.");
-
-  startVideoGenerationSimulation();
+  simulateFullVideoGeneration();
 });
 
-function startVideoGenerationSimulation() {
+function simulateFullVideoGeneration() {
   videoGenerationInProgress = true;
-
   generateVideosBtn.disabled = true;
-  generatePromptsBtn.disabled = true;
-  downloadAllBtn.disabled = true;
 
   videoProgressWrapper.classList.remove("hidden");
-  videoProgressBar.style.width = "0%";
-  videoProgressPercent.textContent = "0%";
-
   let current = 0;
   const total = segments.length;
 
   function step() {
     if (current >= total) {
       videoGenerationInProgress = false;
+      generateVideosBtn.disabled = false;
+      downloadAllBtn.disabled = false;
+
       videoProgressBar.style.width = "100%";
       videoProgressPercent.textContent = "100%";
-      videoProgressBar.classList.add("done");
       videoStatusText.textContent = "영상 생성 완료!";
-      downloadAllBtn.disabled = false;
-      generateVideosBtn.disabled = false;
-      generatePromptsBtn.disabled = false;
       return;
     }
 
-    segments[current].videoStatus = "ready";
-    segments[current].videoUrl = `https://example.com/video_${current + 1}.mp4`;
+    applyFakeVideoData(segments[current]);
 
     current++;
-    videoProgressBar.style.width = `${(current / total) * 100}%`;
-    videoProgressPercent.textContent = `${Math.floor((current / total) * 100)}%`;
-    videoStatusText.textContent = `영상 생성 중… (${current}/${total})`;
+    let pct = Math.round((current/total)*100);
+    videoProgressBar.style.width = pct+"%";
+    videoProgressPercent.textContent = pct+"%";
+    videoStatusText.textContent = `영상 생성 중 (${current}/${total})`;
 
     renderSceneList();
-    setTimeout(step, 400);
+    setTimeout(step, 350);
   }
 
   step();
 }
 
-/* -----------------------------
-   Scene 리스트 렌더링
------------------------------- */
+/* ------------------------------
+   🔄 단일 재생성 기능
+------------------------------*/
+function regenerateSingleVideo(segId) {
+  const seg = segments.find(s => s.id === segId);
+  if (!seg) return;
+
+  // 초기화
+  seg.videoStatus = "pending";
+  seg.videoUrl = null;
+  seg.thumbnailUrl = null;
+  seg.duration = null;
+  seg.resolution = null;
+  seg.model = null;
+  seg.version = null;
+
+  renderSceneList();
+
+  // 개별 렌더링 실행
+  startSingleVideoGeneration(seg);
+}
+
+function startSingleVideoGeneration(seg) {
+  // 0.3초 후 개별 렌더 완료 시뮬레이션
+  setTimeout(() => {
+    applyFakeVideoData(seg);
+    renderSceneList();
+  }, 600);
+}
+
+function applyFakeVideoData(seg) {
+  seg.videoStatus = "ready";
+  seg.videoUrl = `https://example.com/video_${String(seg.id).padStart(3,"0")}.mp4`;
+  seg.thumbnailUrl = `https://picsum.photos/seed/thumb${seg.id}/200/120`;
+  seg.duration = 10 + (seg.id % 6);
+  seg.resolution = "1080p";
+  seg.model = "t2v-beta";
+  seg.version = "v1.0";
+}
+
+/* ------------------------------
+   Scene 렌더링
+------------------------------*/
 function renderSceneList() {
   sceneListEl.innerHTML = "";
-
-  if (segments.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "helper";
-    empty.textContent = "아직 프롬프트가 없습니다.";
-    sceneListEl.appendChild(empty);
-    return;
-  }
 
   segments.forEach(seg => {
     const item = document.createElement("div");
@@ -654,48 +382,51 @@ function renderSceneList() {
     thumb.textContent = "▶";
 
     const textBlock = document.createElement("div");
-    textBlock.className = "scene-text";
-    textBlock.innerHTML = `문장 ${seg.id}<br><small>${seg.lineKo}</small>`;
-
-    const promptBlock = document.createElement("div");
-    promptBlock.className = "scene-prompt";
-    promptBlock.innerHTML = `
-      <div class="scene-prompt-label">영문 프롬프트</div>
-      <div class="scene-prompt-content">${seg.promptEn || "(미생성)"}</div>
+    textBlock.innerHTML = `
+      <div style="font-size:13px;">문장 ${seg.id}</div>
+      <small style="color:#8e94c1;">${seg.lineKo}</small>
     `;
 
-    const actions = document.createElement("div");
-    actions.className = "scene-actions";
+    const promptBlock = document.createElement("div");
+    promptBlock.innerHTML = `
+      <div style="font-size:11px;color:#8e94c1;">영문 프롬프트</div>
+      <div style="font-size:12px;color:#d4d8ff;">${seg.promptEn || "(미생성)"}</div>
+    `;
+
+    const actionBlock = document.createElement("div");
 
     const pill = document.createElement("span");
     pill.className = "pill " + (seg.videoStatus === "ready" ? "ready" : "pending");
-    pill.textContent = seg.videoStatus === "ready" ? "생성 완료" : "대기 중";
+    pill.textContent = seg.videoStatus === "ready" ? "완료" : "대기";
 
     const dlBtn = document.createElement("button");
-    dlBtn.className = "btn " + (seg.videoStatus === "ready" ? "btn-green" : "btn-grey");
+    dlBtn.className = "btn btn-green";
+    dlBtn.style.fontSize = "12px";
     dlBtn.style.padding = "4px 10px";
-    dlBtn.textContent = "다운로드";
+    dlBtn.textContent = "⬇ 다운로드";
     dlBtn.disabled = seg.videoStatus !== "ready";
+    if (!dlBtn.disabled) dlBtn.onclick = ()=>window.open(seg.videoUrl,"_blank");
 
-    if (seg.videoStatus === "ready") {
-      dlBtn.onclick = () => window.open(seg.videoUrl, "_blank");
-    }
+    const regenBtn = document.createElement("button");
+    regenBtn.className = "btn btn-orange";
+    regenBtn.style.fontSize = "12px";
+    regenBtn.style.padding = "4px 10px";
+    regenBtn.textContent = "🔄 재생성";
+    regenBtn.onclick = () => regenerateSingleVideo(seg.id);
 
-    actions.appendChild(pill);
-    actions.appendChild(dlBtn);
+    actionBlock.appendChild(pill);
+    actionBlock.appendChild(dlBtn);
+    actionBlock.appendChild(regenBtn);
 
     item.appendChild(thumb);
     item.appendChild(textBlock);
     item.appendChild(promptBlock);
-    item.appendChild(actions);
+    item.appendChild(actionBlock);
 
     sceneListEl.appendChild(item);
   });
 }
 
-/* -----------------------------
-   초기 렌더
------------------------------- */
 renderSceneList();
 </script>
 
