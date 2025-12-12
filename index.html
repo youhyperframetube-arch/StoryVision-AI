@@ -379,6 +379,41 @@
       color: #7f85b4;
       text-align: center;
     }
+
+    /* ===== 추가: 메타 정보 표(카드 내부) ===== */
+    .meta-table {
+      width: 100%;
+      margin-top: 8px;
+      border-collapse: collapse;
+      border: 1px solid #252c4c;
+      background: rgba(7, 10, 25, 0.45);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .meta-table th,
+    .meta-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1f2542;
+      font-size: 11px;
+      vertical-align: top;
+    }
+    .meta-table th {
+      width: 120px;
+      text-align: left;
+      color: #8e94c1;
+      background: rgba(16, 21, 45, 0.65);
+      border-right: 1px solid #1f2542;
+      font-weight: 600;
+    }
+    .meta-table td {
+      color: #d4d8ff;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .meta-table tr:last-child th,
+    .meta-table tr:last-child td {
+      border-bottom: none;
+    }
   </style>
 </head>
 
@@ -481,7 +516,7 @@
 ------------------------------ */
 const API_BASE = "https://storyvision-backend.onrender.com";
 
-let segments = []; 
+let segments = [];
 let promptGenerationInProgress = false;
 let videoGenerationInProgress = false;
 const PASSWORD = "9981";
@@ -530,7 +565,13 @@ generatePromptsBtn.addEventListener("click", () => {
     lineKo: line,
     promptEn: "",
     videoStatus: "pending",
-    videoUrl: null
+    videoUrl: null,
+
+    /* 추가 메타 (표로 표시할 항목) */
+    duration: null,
+    resolution: null,
+    model: null,
+    originalPrompt: null
   }));
 
   renderSceneList();
@@ -544,6 +585,7 @@ function requestPromptGeneration(lines) {
   generateVideosBtn.disabled = true;
 
   promptProgressWrapper.classList.remove("hidden");
+  promptProgressBar.classList.remove("done");
   promptProgressBar.style.width = "0%";
   promptProgressPercent.textContent = "0%";
   promptStatusText.textContent = "서버 요청 중…";
@@ -574,6 +616,8 @@ function requestPromptGeneration(lines) {
   .catch(err => {
     alert("서버 오류: " + err.message);
     promptGenerationInProgress = false;
+    generatePromptsBtn.disabled = false;
+    generateVideosBtn.disabled = false;
   });
 }
 
@@ -597,6 +641,7 @@ function startVideoGenerationSimulation() {
   downloadAllBtn.disabled = true;
 
   videoProgressWrapper.classList.remove("hidden");
+  videoProgressBar.classList.remove("done");
   videoProgressBar.style.width = "0%";
   videoProgressPercent.textContent = "0%";
 
@@ -616,8 +661,15 @@ function startVideoGenerationSimulation() {
       return;
     }
 
-    segments[current].videoStatus = "ready";
-    segments[current].videoUrl = `https://example.com/video_${current + 1}.mp4`;
+    const seg = segments[current];
+    seg.videoStatus = "ready";
+    seg.videoUrl = `https://example.com/video_${current + 1}.mp4`;
+
+    /* ✅ 추가 메타 더미 채움 (표로 표시될 데이터) */
+    seg.duration = 10 + ((seg.id * 3) % 7);     // 예: 10~16초
+    seg.resolution = "1080p";
+    seg.model = "t2v-beta";
+    seg.originalPrompt = seg.promptEn;
 
     current++;
     videoProgressBar.style.width = `${(current / total) * 100}%`;
@@ -659,9 +711,35 @@ function renderSceneList() {
 
     const promptBlock = document.createElement("div");
     promptBlock.className = "scene-prompt";
+
+    let metaTableHtml = "";
+    if (seg.videoStatus === "ready") {
+      metaTableHtml = `
+        <table class="meta-table">
+          <tr>
+            <th>duration</th>
+            <td>${seg.duration ?? "-"}</td>
+          </tr>
+          <tr>
+            <th>resolution</th>
+            <td>${seg.resolution ?? "-"}</td>
+          </tr>
+          <tr>
+            <th>model</th>
+            <td>${seg.model ?? "-"}</td>
+          </tr>
+          <tr>
+            <th>original prompt</th>
+            <td>${seg.originalPrompt ?? "-"}</td>
+          </tr>
+        </table>
+      `;
+    }
+
     promptBlock.innerHTML = `
       <div class="scene-prompt-label">영문 프롬프트</div>
       <div class="scene-prompt-content">${seg.promptEn || "(미생성)"}</div>
+      ${metaTableHtml}
     `;
 
     const actions = document.createElement("div");
