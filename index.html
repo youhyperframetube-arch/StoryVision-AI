@@ -701,47 +701,50 @@ function renderSceneList() {
     const item = document.createElement("div");
     item.className = "scene-item";
 
+    /* 썸네일 */
     const thumb = document.createElement("div");
     thumb.className = "thumb";
     thumb.textContent = "▶";
 
+    /* 문장 */
     const textBlock = document.createElement("div");
     textBlock.className = "scene-text";
-    textBlock.innerHTML = `문장 ${seg.id}<br><small>${seg.lineKo}</small>`;
+    textBlock.innerHTML = `
+      문장 ${seg.id}
+      <small>${seg.lineKo}</small>
+    `;
 
+    /* 프롬프트 + 메타 정보 */
     const promptBlock = document.createElement("div");
     promptBlock.className = "scene-prompt";
 
-    let metaTableHtml = "";
-    if (seg.videoStatus === "ready") {
-      metaTableHtml = `
-        <table class="meta-table">
-          <tr>
-            <th>duration</th>
-            <td>${seg.duration ?? "-"}</td>
-          </tr>
-          <tr>
-            <th>resolution</th>
-            <td>${seg.resolution ?? "-"}</td>
-          </tr>
-          <tr>
-            <th>model</th>
-            <td>${seg.model ?? "-"}</td>
-          </tr>
-          <tr>
-            <th>original prompt</th>
-            <td>${seg.originalPrompt ?? "-"}</td>
-          </tr>
-        </table>
-      `;
-    }
-
     promptBlock.innerHTML = `
       <div class="scene-prompt-label">영문 프롬프트</div>
-      <div class="scene-prompt-content">${seg.promptEn || "(미생성)"}</div>
-      ${metaTableHtml}
+      <div class="scene-prompt-content">
+        ${seg.promptEn || "(미생성)"}
+      </div>
+
+      <table class="meta-table">
+        <tr>
+          <th>duration</th>
+          <td>${seg.duration ?? "-"}</td>
+        </tr>
+        <tr>
+          <th>resolution</th>
+          <td>${seg.resolution ?? "-"}</td>
+        </tr>
+        <tr>
+          <th>model</th>
+          <td>${seg.model ?? "-"}</td>
+        </tr>
+        <tr>
+          <th>original prompt</th>
+          <td>${seg.originalPrompt ?? "-"}</td>
+        </tr>
+      </table>
     `;
 
+    /* 액션 영역 */
     const actions = document.createElement("div");
     actions.className = "scene-actions";
 
